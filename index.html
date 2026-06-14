@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel de Leilões — Caixa Econômica</title>
+<style>
+  :root{
+    --ink: #1c2b27;
+    --paper: #f6f3ea;
+    --paper-2: #ece6d6;
+    --line: #d8d0bd;
+    --moss: #3d5a4a;
+    --moss-deep: #28392f;
+    --clay: #b5562c;
+    --clay-soft: #e7c2ab;
+    --gold: #c9a04a;
+    --good: #3d6b4f;
+    --bad: #a8432c;
+    --mono: 'IBM Plex Mono', 'Courier New', monospace;
+    --serif: 'Fraunces', 'Iowan Old Style', Georgia, serif;
+    --sans: 'Inter', -apple-system, sans-serif;
+  }
+
+  @font-face{font-family:'sysui';src:local('Inter');}
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ============ HEADER ============ */
+  .masthead{
+    border-bottom: 3px solid var(--ink);
+    padding: 28px 32px 18px;
+    background:
+      repeating-linear-gradient(135deg, transparent 0 28px, rgba(28,43,39,0.025) 28px 56px),
+      var(--paper);
+  }
+  .masthead-inner{
+    max-width: 1320px;
+    margin: 0 auto;
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .masthead h1{
+    font-family: var(--serif);
+    font-weight: 900;
+    font-size: clamp(28px, 4vw, 46px);
+    letter-spacing: -0.01em;
+    margin: 0;
+    line-height: 1;
+  }
+  .masthead h1 em{
+    font-style: italic;
+    color: var(--clay);
+  }
+  .masthead .tagline{
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--moss);
+    margin-top: 6px;
+  }
+  .masthead .date-block{
+    text-align:right;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink);
+    opacity: 0.65;
+    line-height: 1.7;
+  }
+  .masthead .date-block b{
+    display:block;
+    font-size: 13px;
+    opacity: 1;
+  }
+
+  /* ============ DATA SOURCE BAR ============ */
+  .source-bar{
+    max-width: 1320px;
+    margin: 0 auto;
+    padding: 14px 32px;
+    display:flex;
+    align-items:center;
+    gap: 16px;
+    flex-wrap: wrap;
+    border-bottom: 1px solid var(--line);
+    font-family: var(--mono);
+    font-size: 12.5px;
+  }
+  .source-bar .src-label{
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--moss);
+    font-weight: 600;
+  }
+  .source-bar .src-status{
+    flex:1;
+    min-width: 200px;
+  }
+  .source-bar .src-status .ok{color: var(--good); font-weight:600;}
+  .source-bar .src-status .file-name{color: var(--ink); opacity:0.7;}
+
+  .btn{
+    font-family: var(--mono);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    border: 1.5px solid var(--ink);
+    background: transparent;
+    color: var(--ink);
+    padding: 9px 16px;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+  }
+  .btn:hover{
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .btn.primary{
+    background: var(--moss);
+    border-color: var(--moss);
+    color: var(--paper);
+  }
+  .btn.primary:hover{
+    background: var(--moss-deep);
+    border-color: var(--moss-deep);
+  }
+  .btn.ghost{
+    border-color: var(--line);
+    color: var(--ink);
+    opacity: 0.7;
+  }
+  #fileInput{ display:none; }
+
+  /* ============ LAYOUT ============ */
+  .layout{
+    max-width: 1320px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 0;
+    align-items: start;
+  }
+  @media (max-width: 920px){
+    .layout{ grid-template-columns: 1fr; }
+  }
+
+  /* ============ FILTER SIDEBAR ============ */
+  .filters{
+    padding: 24px 24px 60px;
+    border-right: 1px solid var(--line);
+    position: sticky;
+    top: 0;
+    align-self: start;
+    max-height: 100vh;
+    overflow-y: auto;
+  }
+  @media (max-width: 920px){
+    .filters{
+      position: static;
+      border-right:none;
+      border-bottom: 1px solid var(--line);
+      max-height: none;
+    }
+  }
+  .filters h2{
+    font-family: var(--serif);
+    font-size: 18px;
+    font-weight: 800;
+    margin: 0 0 4px;
+    display:flex;
+    align-items:baseline;
+    gap:8px;
+  }
+  .filters h2 .count-pill{
+    font-family: var(--mono);
+    font-size: 11px;
+    background: var(--moss);
+    color: var(--paper);
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 600;
+  }
+  .filter-group{
+    margin-top: 26px;
+    padding-top: 22px;
+    border-top: 1px solid var(--line);
+  }
+  .filter-group:first-of-type{
+    border-top:none;
+    margin-top: 20px;
+    padding-top: 0;
+  }
+  .filter-group label.group-label{
+    display:block;
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--moss);
+    margin-bottom: 10px;
+    font-weight: 700;
+  }
+  select, input[type="text"], input[type="number"]{
+    width: 100%;
+    font-family: var(--sans);
+    font-size: 13.5px;
+    padding: 10px 12px;
+    border: 1.5px solid var(--line);
+    border-radius: 2px;
+    background: #fff;
+    color: var(--ink);
+    transition: border-color 0.15s ease;
+  }
+  select:focus, input:focus{
+    outline: none;
+    border-color: var(--moss);
+  }
+  .range-row{
+    display:flex;
+    gap: 8px;
+    align-items:center;
+  }
+  .range-row input{ width: 100%; }
+  .range-row span{
+    font-family: var(--mono);
+    font-size: 11px;
+    opacity: 0.5;
+  }
+  .slider-wrap{ margin-top: 10px; }
+  input[type="range"]{
+    width: 100%;
+    accent-color: var(--clay);
+  }
+  .slider-value{
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--clay);
+    font-weight: 700;
+    margin-top: 4px;
+  }
+  .checkbox-row{
+    display:flex;
+    align-items:center;
+    gap: 8px;
+    font-size: 13px;
+    margin-top: 6px;
+    cursor:pointer;
+  }
+  .checkbox-row input{ width:auto; accent-color: var(--moss); }
+
+  /* ---- MULTISELECT ---- */
+  .multiselect{
+    position: relative;
+  }
+  .ms-trigger{
+    width: 100%;
+    font-family: var(--sans);
+    font-size: 13.5px;
+    padding: 10px 12px;
+    border: 1.5px solid var(--line);
+    border-radius: 2px;
+    background: #fff;
+    color: var(--ink);
+    cursor: pointer;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap: 8px;
+    text-align:left;
+  }
+  .ms-trigger:hover{
+    border-color: var(--moss);
+  }
+  .multiselect.open .ms-trigger{
+    border-color: var(--moss);
+    border-radius: 2px 2px 0 0;
+  }
+  .ms-trigger .ms-label{
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    flex:1;
+  }
+  .ms-trigger .ms-label.placeholder{ color: var(--ink); opacity: 0.45; }
+  .ms-trigger .ms-count{
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--moss);
+    border: 1px solid var(--moss);
+    padding: 1px 6px;
+    border-radius: 9px;
+    font-weight: 600;
+    flex-shrink:0;
+  }
+  .ms-trigger .ms-caret{
+    font-size: 9px;
+    color: var(--moss);
+    flex-shrink:0;
+    transition: transform 0.15s ease;
+  }
+  .multiselect.open .ms-trigger .ms-caret{ transform: rotate(180deg); }
+
+  .ms-panel{
+    display:none;
+    position: relative;
+    background:#fff;
+    border: 1.5px solid var(--moss);
+    border-top: none;
+    border-radius: 0 0 2px 2px;
+    overflow:hidden;
+    flex-direction:column;
+  }
+  .multiselect.open .ms-panel{ display:flex; }
+
+  .ms-search{
+    border: none;
+    border-bottom: 1px solid var(--line);
+    padding: 9px 12px;
+    font-size: 12.5px;
+    font-family: var(--sans);
+    width:100%;
+    background: var(--paper);
+  }
+  .ms-search:focus{ outline:none; background:#fff; }
+
+  .ms-options{
+    max-height: 220px;
+    overflow-y:auto;
+    padding: 4px 0;
+  }
+  .ms-option{
+    display:flex;
+    align-items:center;
+    gap: 10px;
+    padding: 8px 12px;
+    font-size: 13px;
+    cursor:pointer;
+    line-height: 1.3;
+  }
+  .ms-option:hover{ background: var(--paper-2); }
+  .ms-option input{
+    width: 15px; height: 15px;
+    accent-color: var(--moss);
+    flex-shrink:0;
+    margin: 0;
+  }
+  .ms-option .ms-opt-label{
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .ms-empty{
+    padding: 14px 12px;
+    font-size: 12px;
+    opacity:0.5;
+    font-family: var(--mono);
+  }
+  .ms-actions{
+    display:flex;
+    justify-content:space-between;
+    padding: 8px 12px;
+    border-top: 1px solid var(--line);
+    background: var(--paper);
+  }
+  .ms-actions button{
+    background:none;
+    border:none;
+    color: var(--moss);
+    cursor:pointer;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 2px 0;
+  }
+  .ms-actions button:hover{ color: var(--clay); }
+
+
+
+  /* ============ MAIN CONTENT ============ */
+  .content{
+    padding: 24px 32px 80px;
+    min-width: 0;
+  }
+
+  /* ---- KPI STRIP ---- */
+  .kpi-strip{
+    display:grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    margin-bottom: 28px;
+  }
+  @media (max-width: 760px){
+    .kpi-strip{ grid-template-columns: repeat(2, 1fr); }
+  }
+  .kpi{
+    background: var(--paper);
+    padding: 18px 16px;
+  }
+  .kpi .kpi-label{
+    font-family: var(--mono);
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--moss);
+    margin-bottom: 6px;
+  }
+  .kpi .kpi-value{
+    font-family: var(--serif);
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+  .kpi .kpi-sub{
+    font-size: 11.5px;
+    opacity: 0.6;
+    margin-top: 2px;
+  }
+
+  /* ---- SECTION HEADERS ---- */
+  .section-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 14px;
+    margin-top: 40px;
+  }
+  .section-head:first-of-type{ margin-top:0; }
+  .section-head h3{
+    font-family: var(--serif);
+    font-size: 22px;
+    font-weight: 800;
+    margin:0;
+    display:flex;
+    align-items:center;
+    gap: 10px;
+  }
+  .section-head h3 .num{
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--clay);
+    border: 1px solid var(--clay);
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .section-note{
+    font-size: 12.5px;
+    opacity: 0.6;
+    max-width: 480px;
+  }
+  .sort-controls{
+    font-family: var(--mono);
+    font-size: 12px;
+    display:flex;
+    align-items:center;
+    gap: 8px;
+  }
+  .sort-controls select{
+    width:auto;
+    padding: 6px 8px;
+    font-size: 12px;
+  }
+
+  /* ---- RANKING CARDS ---- */
+  .ranking-grid{
+    display:grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 14px;
+    margin-bottom: 8px;
+  }
+  .rank-card{
+    border: 1.5px solid var(--ink);
+    background: #fff;
+    padding: 16px;
+    position: relative;
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+    text-decoration:none;
+    color: var(--ink);
+    display:block;
+  }
+  .rank-card:hover{
+    transform: translate(-2px,-2px);
+    box-shadow: 4px 4px 0 var(--clay-soft);
+  }
+  .rank-card .rank-badge{
+    position:absolute;
+    top:-12px; left: 14px;
+    background: var(--clay);
+    color: var(--paper);
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight:700;
+    padding: 3px 9px;
+    letter-spacing: 0.05em;
+  }
+  .rank-card .rc-city{
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--moss);
+    margin-top: 8px;
+  }
+  .rank-card .rc-addr{
+    font-size: 13px;
+    font-weight: 600;
+    margin: 4px 0 10px;
+    line-height: 1.35;
+    min-height: 36px;
+  }
+  .rank-card .rc-prices{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    border-top: 1px dashed var(--line);
+    padding-top: 10px;
+  }
+  .rank-card .rc-price{
+    font-family: var(--serif);
+    font-size: 19px;
+    font-weight: 800;
+  }
+  .rank-card .rc-discount{
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--clay);
+    background: var(--clay-soft);
+    padding: 2px 8px;
+  }
+  .rank-card .rc-meta{
+    font-family: var(--mono);
+    font-size: 10.5px;
+    opacity: 0.55;
+    margin-top: 8px;
+    display:flex;
+    justify-content:space-between;
+  }
+
+  /* ---- TABLE ---- */
+  .table-wrap{
+    border: 1px solid var(--line);
+    overflow-x: auto;
+    background: #fff;
+  }
+  table{
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    min-width: 920px;
+  }
+  thead th{
+    text-align:left;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--moss);
+    background: var(--paper-2);
+    padding: 10px 12px;
+    border-bottom: 2px solid var(--ink);
+    cursor:pointer;
+    user-select:none;
+    white-space:nowrap;
+    position: sticky;
+    top:0;
+  }
+  thead th:hover{ color: var(--clay); }
+  thead th .arrow{ opacity:0.4; margin-left:3px; font-size:10px; }
+  tbody td{
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+  }
+  tbody tr:hover{ background: var(--paper-2); }
+  tbody tr:nth-child(even){ background: rgba(61,90,74,0.03); }
+  td.num, th.num{ text-align:right; font-family: var(--mono); white-space:nowrap; }
+  td.discount-cell{ font-weight:700; }
+  td.discount-cell.high{ color: var(--good); }
+  td.discount-cell.mid{ color: var(--gold); }
+  td.discount-cell.low{ color: var(--bad); }
+  td a.tbl-link{
+    color: var(--clay);
+    text-decoration:none;
+    font-family: var(--mono);
+    font-size: 11px;
+    border-bottom: 1px solid var(--clay);
+  }
+  td a.tbl-link:hover{ background: var(--clay-soft); }
+
+  .table-foot{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    opacity: 0.65;
+    padding: 10px 4px;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+  .pager{
+    display:flex;
+    gap: 6px;
+  }
+  .pager button{
+    font-family: var(--mono);
+    font-size: 11px;
+    border: 1px solid var(--line);
+    background: #fff;
+    padding: 5px 10px;
+    cursor:pointer;
+    border-radius:2px;
+  }
+  .pager button:hover:not(:disabled){ border-color: var(--moss); color: var(--moss); }
+  .pager button:disabled{ opacity:0.35; cursor:default; }
+
+  /* ---- EMPTY STATE ---- */
+  .empty-state{
+    text-align:center;
+    padding: 60px 20px;
+    border: 1.5px dashed var(--line);
+    font-family: var(--mono);
+    font-size: 13px;
+    opacity:0.6;
+  }
+
+  /* ---- FOOTER NOTE ---- */
+  .foot-note{
+    max-width: 1320px;
+    margin: 40px auto 0;
+    padding: 20px 32px 40px;
+    border-top: 1px solid var(--line);
+    font-size: 12px;
+    opacity: 0.5;
+    font-family: var(--mono);
+    line-height: 1.7;
+  }
+
+  /* loading overlay */
+  .loading-overlay{
+    position:fixed; inset:0; background: rgba(246,243,234,0.9);
+    display:flex; align-items:center; justify-content:center;
+    z-index: 50; font-family: var(--mono); font-size:13px;
+    flex-direction:column; gap:10px;
+  }
+  .loading-overlay.hidden{ display:none; }
+  .spinner{
+    width: 28px; height:28px; border: 3px solid var(--line);
+    border-top-color: var(--clay); border-radius:50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin{ to{ transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="loading-overlay hidden" id="loadingOverlay">
+  <div class="spinner"></div>
+  <div id="loadingText">Processando arquivo…</div>
+</div>
+
+<header class="masthead">
+  <div class="masthead-inner">
+    <div>
+      <h1>Painel do <em>Leilão</em></h1>
+      <div class="tagline">Imóveis Caixa Econômica · análise e filtros</div>
+    </div>
+    <div class="date-block">
+      <b id="genDate">—</b>
+      data de geração da base
+    </div>
+  </div>
+</header>
+
+<div class="source-bar">
+  <span class="src-label">Base ativa</span>
+  <span class="src-status" id="sourceStatus">Carregando dados de exemplo (SP)…</span>
+  <button class="btn" id="btnLoadFile">Carregar CSV (.csv)</button>
+  <button class="btn ghost" id="btnReset">Recarregar base online</button>
+  <input type="file" id="fileInput" accept=".csv">
+</div>
+
+<div class="layout">
+
+  <aside class="filters">
+    <h2>Filtros <span class="count-pill" id="resultCount">0</span></h2>
+
+    <div class="filter-group">
+      <label class="group-label">Busca livre</label>
+      <input type="text" id="fSearch" placeholder="cidade, bairro, endereço…">
+    </div>
+
+    <div class="filter-group">
+      <label class="group-label">UF</label>
+      <div class="multiselect" id="msUF" data-placeholder="Todas"></div>
+    </div>
+
+    <div class="filter-group">
+      <label class="group-label">Cidade</label>
+      <div class="multiselect" id="msCidade" data-placeholder="Todas"></div>
+    </div>
+
+    <div class="filter-group">
+      <label class="group-label">Tipo de imóvel</label>
+      <div class="multiselect" id="msTipo" data-placeholder="Todos"></div>
+    </div>
+
+    <div class="filter-group">
+      <label class="group-label">Modalidade de venda</label>
+      <div class="multiselect" id="msModalidade" data-placeholder="Todas"></div>
+    </div>
+
+    <div class="filter-group">
+      <label class="group-label">Preço (R$)</label>
+      <div class="range-row">
+        <input type="number" id="fPrecoMin" placeholder="mín">
+        <span>—</span>
+        <input type="number" id="fPrecoMax" placeholder="máx">
+      </div>
+    </div>
+
+    <div class="filter-group">
+      <label class="group-label">Desconto mínimo</label>
+      <div class="slider-wrap">
+        <input type="range" id="fDesconto" min="0" max="90" value="0" step="1">
+        <div class="slider-value" id="fDescontoValue">0% ou mais</div>
+      </div>
+    </div>
+
+    <div class="filter-group">
+      <label class="group-label">Quartos (mínimo)</label>
+      <select id="fQuartos">
+        <option value="">Qualquer</option>
+        <option value="1">1+</option>
+        <option value="2">2+</option>
+        <option value="3">3+</option>
+        <option value="4">4+</option>
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label class="checkbox-row">
+        <input type="checkbox" id="fFinanciamento">
+        Aceita financiamento
+      </label>
+    </div>
+
+    <div class="filter-group">
+      <button class="btn primary" id="btnClearFilters" style="width:100%;">Limpar filtros</button>
+    </div>
+  </aside>
+
+  <main class="content">
+
+    <div class="kpi-strip" id="kpiStrip">
+      <div class="kpi">
+        <div class="kpi-label">Imóveis no filtro</div>
+        <div class="kpi-value" id="kpiTotal">0</div>
+        <div class="kpi-sub" id="kpiTotalSub">de 0 na base</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Desconto médio</div>
+        <div class="kpi-value" id="kpiDesconto">0%</div>
+        <div class="kpi-sub">vs. valor de avaliação</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Preço médio</div>
+        <div class="kpi-value" id="kpiPreco">R$ 0</div>
+        <div class="kpi-sub" id="kpiPrecoSub">faixa: —</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Preço médio / m²</div>
+        <div class="kpi-value" id="kpiM2">R$ 0</div>
+        <div class="kpi-sub" id="kpiM2Sub">considerando imóveis com área informada</div>
+      </div>
+    </div>
+
+    <div class="section-head">
+      <h3><span class="num">1</span> Maiores descontos</h3>
+      <div class="section-note">Os 12 imóveis com maior desconto sobre o valor de avaliação, dentro dos filtros aplicados.</div>
+    </div>
+    <div class="ranking-grid" id="rankingGrid"></div>
+
+    <div class="section-head">
+      <h3><span class="num">2</span> Todos os imóveis filtrados</h3>
+      <div class="sort-controls">
+        Ordenar por
+        <select id="sortField">
+          <option value="desconto_desc">Maior desconto</option>
+          <option value="preco_asc">Menor preço</option>
+          <option value="preco_desc">Maior preço</option>
+          <option value="precom2_asc">Menor preço / m²</option>
+          <option value="area_desc">Maior área</option>
+        </select>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr id="tableHeadRow"></tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+    <div class="table-foot">
+      <div id="pageInfo">—</div>
+      <div class="pager" id="pager"></div>
+    </div>
+
+  </main>
+</div>
+
+<div class="foot-note">
+  Fonte dos dados: lista de imóveis disponibilizada publicamente pela Caixa Econômica Federal (venda-imoveis.caixa.gov.br).
+  Os valores de preço de venda e avaliação são informativos — confirme sempre as condições atualizadas diretamente no site oficial antes de qualquer decisão.
+  A base é atualizada automaticamente uma vez por semana a partir do arquivo oficial da Caixa (todos os estados).
+  Para usar uma base própria, carregue um CSV pelo botão "Carregar CSV" acima — o arquivo precisa seguir o mesmo formato (separador ";", colunas: N° do imóvel, UF, Cidade, Bairro, Endereço, Preço, Valor de avaliação, Desconto, Financiamento, Descrição, Modalidade de venda, Link de acesso).
+</div>
+
+<script>
+window.FALLBACK_DATA = [{"cod":10005120,"uf":"AC","cidade":"CRUZEIRO DO SUL","bairro":"BAIRRO COHAB","endereco":"RUA DO PURUS, N. S/N, QUARTEIRÃO 272, LOTE 10","tipo":"Terreno","area":0.0,"area_priv":0.0,"quartos":null,"vagas":null,"preco":62592.83,"avaliacao":150000.0,"desconto":0.5828,"financiamento":"Sim","modalidade":"Venda Online","link":"https://venda-imoveis.caixa.gov.br/sistema/detalhe-imovel.asp?hdnimovel=10005120"},{"cod":10005121,"uf":"AC","cidade":"CRUZEIRO DO SUL","bairro":"BAIRRO COHAB","endereco":"RUA DO PURUS, N. S/N, QUARTEIRÃO 272 LOTE 11","tipo":"Terreno","area":0.0,"area_priv":0.0,"quartos":null,"vagas":null,"preco":62592.83,"avaliacao":150000.0,"desconto":0.5828,"financiamento":"Sim","modalidade":"Venda Online","link":"https://venda-imoveis.caixa.gov.br/sistema/detalhe-imovel.asp?hdnimovel=10005121"},{"cod":10005122,"uf":"AC","cidade":"CRUZEIRO DO SUL","bairro":"BAIRRO COHAB","endereco":"RUA DO PURUS, N. S/N, QUARTEIRÃO 272 LOTE 12","tipo":"Terreno","area":0.0,"area_priv":0.0,"quartos":null,"vagas":null,"preco":62592.83,"avaliacao":150000.0,"desconto":0.5828,"financiamento":"Sim","modalidade":"Venda Online","link":"https://venda-imoveis.caixa.gov.br/sistema/detalhe-imovel.asp?hdnimovel=10005122"},{"cod":1444420699441,"uf":"AC","cidade":"CRUZEIRO DO SUL","bairro":"Centro","endereco":"AVENIDA 17 DE NOVEMBRO, N. SN, QD 27 LT 18","tipo":"Casa","area":0.0,"area_priv":240.0,"quartos":3.0,"vagas":null,"preco":278616.46,"avaliacao":507000.0,"desconto":0.45049999999999996,"financiamento":"Sim","modalidade":"Venda Direta Online","link":"https://venda-imoveis.caixa.gov.br/sistema/detalhe-imovel.asp?hdnimovel=1444420699441"},{"cod":8444411200837,"uf":"AC","cidade":"CRUZEIRO DO SUL","bairro":"TELEGRAFO","endereco":"RUA SERGIPE, N. 791, SETOR 03 B QD 295 LT 16","tipo":"Casa","area":111.7,"area_priv":111.7,"quartos":1.0,"vagas":1.0,"preco":107631.38,"avaliacao":190000.0,"desconto":0.4336,"financiamento":"Sim","modalidade":"Venda Direta Online","link":"https://venda-imoveis.caixa.gov.br/sistema/detalhe-imovel.asp?hdnimovel=8444411200837"},{"cod":1555509099755,"uf":"AC","cidade":"PLACIDO DE CASTRO","bairro":"CENTRO","endereco":"RUA EPITACIO PESSOA, N. SN, RUA PROJETADA","tipo":"Terreno","area":0.0,"area_priv":0.0,"quartos":null,"vagas":null,"preco":564023.16,"avaliacao":885000.0,"desconto":0.3627,"financiamento":"Sim","modalidade":"Venda Direta Online","link":"https://venda-imoveis.caixa.gov.br/sistema/detalhe-imovel.asp?hdnimovel=1555509099755"},{"cod":8444400929075,"uf":"AC","cidade":"PORTO ACRE","bairro":"CORONEL JOSE CANDIDO","endereco":"RUA LUIZ GALVEZ, N. SN,  QD 46 LT 05","tipo":"Casa","area":0.0,"area_priv":258.0,"quartos":3.0,"vagas":null,"preco":71733.93,"avaliacao":138000.0,"desconto":0.4802,"financiamento":"Sim","modalidade":"Venda Direta Online","link":"https://venda-imoveis.caixa.gov.br/sistema/detalhe-imovel.asp?hdnimovel=8444400929075"},{"cod":1444400380830,"uf":"AC","cidade":"RIO BRANCO","bairro":"Vila Ivonete","endereco":"RUA CAMPINA GRANDE, N. 56,  LT 02, QD A","tipo":"Casa","area":0.0,"area_priv":83.99,"quartos":3.0,"vagas":null,"preco":325327.31,"avaliacao":592000.0,"desconto":0.45049999999999996,"financiamento":"Sim","modalidade":"Venda Direta Online","link":"https://venda-imoveis.caixa.gov.br/sistema/detalhe-imovel.asp?hdnimovel=1444400380830"}];
+</script>
+<script src="./app.js"></script>
+</body>
+</html>
