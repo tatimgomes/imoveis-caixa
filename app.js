@@ -342,7 +342,8 @@
     { key: 'desconto', label: 'Desconto', sortable: true, num: true },
     { key: 'precom2', label: 'R$/m²', sortable: true, num: true },
     { key: 'modalidade', label: 'Modalidade', sortable: false },
-    { key: 'link', label: 'Edital', sortable: false }
+    { key: 'link', label: 'Edital', sortable: false },
+    { key: 'avaliar', label: 'Viabilidade', sortable: false }
   ];
 
   // área de referência para cálculo de R$/m²: prioriza privativa, cai para total
@@ -457,6 +458,7 @@
           <td class="num">${precom2 ? fmtBRL0(precom2) : '—'}</td>
           <td>${escapeHtml(d.modalidade || '—')}</td>
           <td>${d.link ? `<a class="tbl-link" href="${d.link}" target="_blank" rel="noopener">ver imóvel</a>` : '—'}</td>
+          <td><button type="button" class="btn-viab" data-cod="${escapeAttr(d.cod)}">Avaliar</button></td>
         `;
         tbody.appendChild(tr);
       });
@@ -595,6 +597,229 @@
     document.getElementById('fFinanciamento').checked = false;
   }
 
+  /* ============ CALCULADORA DE VIABILIDADE ============ */
+  // Replica as fórmulas da planilha "Calculadora de viabilidade financeira".
+  // Campos editáveis: input/select sem atributo "disabled".
+  // Campos calculados: inputs com atributo "disabled" (atualizados via JS).
+
+  const VIAB_INPUT_IDS = [
+    'vArea','vAvaliacao','vLanceMinimo','vValorCompra','vValorVenda','vPrazo','vRoiMinimo',
+    'vTaxaItbi','vRegistro','vEmolumentos',
+    'vIptuMensal','vCondominioMensal','vReformaPorM2',
+    'vFinanciamento','vPercEntrada',
+    'vComissaoCorretor','vAdvogado','vAssessoria','vOutrasEventuais','vAliquotaIr'
+  ];
+
+  function viabNum(id){
+    const el = document.getElementById(id);
+    if (!el) return 0;
+    if (el.tagName === 'SELECT') return el.value;
+    const v = parseFloat(el.value);
+    return isNaN(v) ? 0 : v;
+  }
+
+  function viabSetOutput(id, value){
+    const el = document.getElementById(id);
+    if (el) el.value = fmtBRL(value);
+  }
+
+  function viabFindItemByCod(cod){
+    return DATA.find(d => String(d.cod) === String(cod));
+  }
+
+  function openViabModal(cod){
+    const item = viabFindItemByCod(cod);
+    if (!item) return;
+
+    // descrição da oportunidade (somente leitura)
+    document.getElementById('vTipo').value = item.tipo || '—';
+    document.getElementById('vCidade').value = `${item.cidade || ''}${item.uf ? ' / ' + item.uf : ''}`;
+    document.getElementById('vModalidade').value = item.modalidade || '—';
+
+    const areaRef = getAreaRef(item);
+    document.getElementById('vArea').value = areaRef || 0;
+    document.getElementById('vAvaliacao').value = item.avaliacao != null ? item.avaliacao : 0;
+    document.getElementById('vLanceMinimo').value = item.preco != null ? item.preco : 0;
+
+    // negócio: pré-preenche valor de compra com o preço/lance da Caixa,
+    // e valor esperado de venda com o valor de avaliação (ponto de partida editável)
+    document.getElementById('vValorCompra').value = item.preco != null ? item.preco : 0;
+    document.getElementById('vValorVenda').value = item.avaliacao != null ? item.avaliacao : 0;
+    document.getElementById('vPrazo').value = 6;
+    document.getElementById('vRoiMinimo').value = 30;
+
+    // documentação (defaults da planilha)
+    document.getElementById('vTaxaItbi').value = 2;
+    document.getElementById('vRegistro').value = 0;
+    document.getElementById('vEmolumentos').value = 0;
+
+    // manutenção e reforma
+    document.getElementById('vIptuMensal').value = 0;
+    document.getElementById('vCondominioMensal').value = 0;
+    document.getElementById('vReformaPorM2').value = 350;
+
+    // pagamento
+    document.getElementById('vFinanciamento').value = 'Não';
+    document.getElementById('vPercEntrada').value = 0;
+
+    // despesas na venda e outras
+    document.getElementById('vComissaoCorretor').value = 6;
+    document.getElementById('vAdvogado').value = 0;
+    document.getElementById('vAssessoria').value = 0;
+    // "outras eventuais" sugerido como 20% do valor de avaliação, igual à planilha original
+    document.getElementById('vOutrasEventuais').value = item.avaliacao != null ? Math.round(item.avaliacao * 0.2 * 100) / 100 : 0;
+    document.getElementById('vAliquotaIr').value = 15;
+
+    const subtitleParts = [];
+    if (item.bairro) subtitleParts.push(item.bairro);
+    if (item.endereco) subtitleParts.push(item.endereco);
+    document.getElementById('viabSubtitle').textContent = subtitleParts.join(' · ') || '—';
+
+    viabRecalc();
+
+    document.getElementById('viabOverlay').classList.remove('hidden');
+  }
+
+  function closeViabModal(){
+    document.getElementById('viabOverlay').classList.add('hidden');
+  }
+
+  // ===== Lógica de cálculo (fórmulas da planilha) =====
+  function viabRecalc(){
+    // --- Negócio ---
+    const valorCompra = viabNum('vValorCompra');       // B17
+    const valorVenda = viabNum('vValorVenda');         // B18
+    const prazo = viabNum('vPrazo');                   // B19
+    const roiMinimo = viabNum('vRoiMinimo') / 100;     // B20
+
+    // comissão do leiloeiro: 5% se modalidade for 1º/2º Leilão ou Licitação Aberta, senão 0 (B14)
+    const modalidade = document.getElementById('vModalidade').value || '';
+    const comissaoLeiloeiroPerc = /^(1º Leilão|2º Leilão|Licitação Aberta)$/i.test(modalidade.trim()) ? 0.05 : 0;
+    const comissaoLeiloeiroValor = comissaoLeiloeiroPerc * valorCompra; // B35
+    document.getElementById('vComissaoLeiloeiro').value = `${(comissaoLeiloeiroPerc*100).toFixed(0)}% — ${fmtBRL(comissaoLeiloeiroValor)}`;
+
+    // --- Documentação ---
+    const taxaItbi = viabNum('vTaxaItbi') / 100;  // F5
+    const registro = viabNum('vRegistro');        // F7
+    const emolumentos = viabNum('vEmolumentos');  // F8
+    const valorItbi = taxaItbi * valorCompra;     // F6
+    const totalDocumentacao = valorItbi + registro + emolumentos; // F9
+    viabSetOutput('vValorItbi', valorItbi);
+    viabSetOutput('vTotalDocumentacao', totalDocumentacao);
+
+    // --- Manutenção e reforma ---
+    const iptuMensal = viabNum('vIptuMensal');           // F12
+    const condominioMensal = viabNum('vCondominioMensal'); // F13
+    const reformaPorM2 = viabNum('vReformaPorM2');       // 350 na planilha
+    const area = viabNum('vArea');                       // B11
+    const reformaTotal = area * reformaPorM2;            // F16
+    const acumuladoVenda = (iptuMensal + condominioMensal) * prazo; // B42
+    viabSetOutput('vReformaTotal', reformaTotal);
+    viabSetOutput('vAcumuladoVenda', acumuladoVenda);
+
+    // --- Pagamento / financiamento ---
+    const financiamento = document.getElementById('vFinanciamento').value; // B23
+    const percEntrada = viabNum('vPercEntrada') / 100;   // B24
+    const isFinanciado = financiamento === 'Sim';
+
+    const valorEntrada = percEntrada * valorCompra;      // B25
+    const valorFinanciado = isFinanciado ? (valorCompra - valorEntrada) : 0; // B26
+    const parcela = valorFinanciado * 0.0097;            // B27
+    const saldoPrazoVenda = valorFinanciado * (1 - 0.0023809375 * prazo); // B28
+
+    viabSetOutput('vValorEntrada', valorEntrada);
+    viabSetOutput('vValorFinanciado', valorFinanciado);
+    viabSetOutput('vParcela', parcela);
+    viabSetOutput('vSaldoPrazoVenda', saldoPrazoVenda);
+
+    // --- Despesas na venda ---
+    const comissaoCorretorPerc = viabNum('vComissaoCorretor') / 100; // F19
+    const valorComissao = comissaoCorretorPerc * valorVenda;          // F20
+    viabSetOutput('vValorComissao', valorComissao);
+
+    // --- Outras despesas ---
+    const advogado = viabNum('vAdvogado');           // F23
+    const assessoria = viabNum('vAssessoria');       // F24
+    const outrasEventuais = viabNum('vOutrasEventuais'); // F25
+    const totalOutrasDespesas = advogado + assessoria + outrasEventuais; // F26
+    viabSetOutput('vTotalOutrasDespesas', totalOutrasDespesas);
+
+    // --- Capital à vista (B32 = soma B33:B36) ---
+    const lanceAVista = isFinanciado ? 0 : valorCompra;       // B33
+    const entradaFinanciamento = isFinanciado ? valorEntrada : 0; // B34
+    // B35 = comissaoLeiloeiroValor, B36 = totalDocumentacao
+    const capitalVista = lanceAVista + entradaFinanciamento + comissaoLeiloeiroValor + totalDocumentacao; // B32
+
+    // --- Despesas mensais até a venda (B38 = soma B39:B41), acumulado B42 = B38*prazo ---
+    const prestacaoFinanciamento = isFinanciado ? parcela : 0; // B39
+    const despesasMensais = prestacaoFinanciamento + iptuMensal + condominioMensal; // B38
+    const acumuladoAteVenda = despesasMensais * prazo; // B42 (substitui o cálculo anterior simplificado)
+    viabSetOutput('vAcumuladoVenda', acumuladoAteVenda);
+
+    // --- Total de despesas (F32 = B32 + B42 + F16 + F26) ---
+    const totalDespesas = capitalVista + acumuladoAteVenda + reformaTotal + totalOutrasDespesas; // F32
+
+    // --- Receita líquida (F34 = B18 - F20 - (saldoPrazoVenda se financiado)) ---
+    const receitaLiquida = valorVenda - valorComissao - (isFinanciado ? saldoPrazoVenda : 0); // F34
+
+    // --- Lucro bruto (F36 = F34 - F32) ---
+    const lucroBruto = receitaLiquida - totalDespesas; // F36
+
+    // --- Imposto de renda ---
+    const aliquotaIr = viabNum('vAliquotaIr') / 100; // F39
+    let valorIr;
+    if (!isFinanciado){
+      // F40 = (B18 - B17 - B36 - F16 - B35 - F20) * F39
+      valorIr = (valorVenda - valorCompra - totalDocumentacao - reformaTotal - comissaoLeiloeiroValor - valorComissao) * aliquotaIr;
+    } else {
+      // F41 = (B18 - F20 - B36 - B35 - B28 - B25 - (prazo*B27) - F16) * F39
+      valorIr = (valorVenda - valorComissao - totalDocumentacao - comissaoLeiloeiroValor - saldoPrazoVenda - valorEntrada - (prazo*parcela) - reformaTotal) * aliquotaIr;
+    }
+    valorIr = Math.max(0, valorIr);
+    viabSetOutput('vValorIr', valorIr);
+
+    // --- Lucro líquido (F43 = F34 - F32 - IR) ---
+    const lucroLiquido = receitaLiquida - totalDespesas - valorIr; // F43
+
+    // --- ROI (F45 = F43 / F32, onde F32 aqui é o "Total de despesas" usado como capital empregado) ---
+    const roi = totalDespesas !== 0 ? (lucroLiquido / totalDespesas) : 0;
+
+    viabSetOutput('vCapitalVista', capitalVista);
+    viabSetOutput('vTotalDespesas', totalDespesas);
+    viabSetOutput('vReceitaLiquida', receitaLiquida);
+    viabSetOutput('vLucroBruto', lucroBruto);
+
+    const hlLucro = document.getElementById('vHlLucro');
+    hlLucro.textContent = fmtBRL0(lucroLiquido);
+    hlLucro.className = 'viab-hl-value ' + (lucroLiquido >= 0 ? 'positive' : 'negative');
+
+    const hlRoi = document.getElementById('vHlRoi');
+    hlRoi.textContent = fmtPct(roi);
+    hlRoi.className = 'viab-hl-value ' + (roi >= roiMinimo ? 'positive' : 'negative');
+
+    document.getElementById('vHlRoiMin').textContent = fmtPct(roiMinimo);
+  }
+
+  function bindViabEvents(){
+    document.getElementById('viabClose').addEventListener('click', closeViabModal);
+    document.getElementById('viabOverlay').addEventListener('click', (e)=>{
+      if (e.target.id === 'viabOverlay') closeViabModal();
+    });
+
+    VIAB_INPUT_IDS.forEach(id=>{
+      const el = document.getElementById(id);
+      if (!el) return;
+      const evt = el.tagName === 'SELECT' ? 'change' : 'input';
+      el.addEventListener(evt, viabRecalc);
+    });
+
+    // delegação: botões "Avaliar" são recriados a cada render da tabela
+    document.getElementById('tableBody').addEventListener('click', (e)=>{
+      const btn = e.target.closest('.btn-viab');
+      if (btn) openViabModal(btn.dataset.cod);
+    });
+  }
+
   /* ============ EVENTOS ============ */
   function bindEvents(){
     ['fSearch','fPrecoMin','fPrecoMax','fQuartos'].forEach(id=>{
@@ -632,6 +857,7 @@
     buildMultiselect('msTipo');
     buildMultiselect('msModalidade');
     bindEvents();
+    bindViabEvents();
     loadOnlineData();
   });
 })();

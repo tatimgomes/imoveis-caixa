@@ -610,6 +610,208 @@
   }
   td a.tbl-link:hover{ background: var(--clay-soft); }
 
+  .btn-viab{
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    border: 1.5px solid var(--moss);
+    background: transparent;
+    color: var(--moss);
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 2px;
+    white-space: nowrap;
+    transition: all 0.15s ease;
+  }
+  .btn-viab:hover{
+    background: var(--moss);
+    color: var(--paper);
+  }
+
+  /* ============ MODAL DE VIABILIDADE ============ */
+  .viab-overlay{
+    position: fixed;
+    inset: 0;
+    background: rgba(28,43,39,0.55);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .viab-overlay.hidden{ display:none; }
+
+  .viab-modal{
+    background: var(--paper);
+    border: 1.5px solid var(--ink);
+    box-shadow: 6px 6px 0 var(--clay-soft);
+    width: 100%;
+    max-width: 980px;
+    max-height: 92vh;
+    overflow-y: auto;
+    position: relative;
+  }
+
+  .viab-header{
+    position: sticky;
+    top: 0;
+    background: var(--paper);
+    border-bottom: 3px solid var(--ink);
+    padding: 18px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    z-index: 2;
+  }
+  .viab-header h2{
+    font-family: var(--serif);
+    font-size: 22px;
+    font-weight: 800;
+    margin: 0 0 4px;
+  }
+  .viab-header .viab-subtitle{
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--moss);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .viab-close{
+    font-family: var(--mono);
+    font-size: 13px;
+    border: 1.5px solid var(--ink);
+    background: transparent;
+    color: var(--ink);
+    width: 30px; height: 30px;
+    cursor: pointer;
+    border-radius: 2px;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+  .viab-close:hover{ background: var(--ink); color: var(--paper); }
+
+  .viab-body{
+    padding: 20px 24px 28px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 28px;
+  }
+  @media (max-width: 760px){
+    .viab-body{ grid-template-columns: 1fr; }
+  }
+
+  .viab-section{
+    margin-bottom: 22px;
+  }
+  .viab-section h3{
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--moss);
+    font-weight: 700;
+    margin: 0 0 12px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--line);
+  }
+  .viab-section.full{
+    grid-column: 1 / -1;
+  }
+
+  .viab-row{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 0;
+    font-size: 13px;
+  }
+  .viab-row label{
+    flex: 1;
+    color: var(--ink);
+  }
+  .viab-row .viab-input-wrap{
+    flex-shrink: 0;
+    width: 150px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .viab-row input, .viab-row select{
+    width: 100%;
+    font-family: var(--sans);
+    font-size: 13px;
+    padding: 6px 8px;
+    border: 1.5px solid var(--gold);
+    border-radius: 2px;
+    background: #fff;
+    color: var(--ink);
+    text-align: right;
+  }
+  .viab-row select{ text-align: left; }
+  .viab-row input:focus, .viab-row select:focus{
+    outline: none;
+    border-color: var(--clay);
+  }
+  .viab-row .viab-prefix{
+    font-family: var(--mono);
+    font-size: 11px;
+    opacity: 0.55;
+    flex-shrink: 0;
+  }
+
+  .viab-row.viab-output input{
+    border: none;
+    background: var(--paper-2);
+    color: var(--ink);
+    font-family: var(--mono);
+    font-weight: 600;
+    cursor: default;
+  }
+  .viab-row.viab-output label{
+    font-weight: 600;
+  }
+
+  .viab-highlight{
+    margin-top: 16px;
+    border: 1.5px solid var(--ink);
+    background: #fff;
+    padding: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .viab-highlight .viab-hl-item{
+    text-align: left;
+  }
+  .viab-highlight .viab-hl-label{
+    font-family: var(--mono);
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--moss);
+    margin-bottom: 4px;
+  }
+  .viab-highlight .viab-hl-value{
+    font-family: var(--serif);
+    font-size: 26px;
+    font-weight: 800;
+  }
+  .viab-highlight .viab-hl-value.positive{ color: var(--good); }
+  .viab-highlight .viab-hl-value.negative{ color: var(--bad); }
+
+  .viab-note{
+    font-family: var(--mono);
+    font-size: 11px;
+    opacity: 0.55;
+    margin-top: 10px;
+    line-height: 1.6;
+  }
+
   .table-foot{
     display:flex;
     justify-content:space-between;
@@ -829,6 +1031,110 @@
     </div>
 
   </main>
+</div>
+
+<div class="viab-overlay hidden" id="viabOverlay">
+  <div class="viab-modal">
+    <div class="viab-header">
+      <div>
+        <h2>Viabilidade do investimento</h2>
+        <div class="viab-subtitle" id="viabSubtitle">—</div>
+      </div>
+      <button type="button" class="viab-close" id="viabClose">✕</button>
+    </div>
+    <div class="viab-body">
+
+      <div class="viab-section">
+        <h3>Descrição da oportunidade</h3>
+        <div class="viab-row"><label>Tipo de imóvel</label><div class="viab-input-wrap"><input type="text" id="vTipo" disabled></div></div>
+        <div class="viab-row"><label>Cidade/UF</label><div class="viab-input-wrap"><input type="text" id="vCidade" disabled></div></div>
+        <div class="viab-row"><label>Modalidade de venda</label><div class="viab-input-wrap"><input type="text" id="vModalidade" disabled></div></div>
+        <div class="viab-row"><label>Área (m²)</label><div class="viab-input-wrap"><input type="number" id="vArea" step="0.01"></div></div>
+        <div class="viab-row"><label>Valor de avaliação</label><div class="viab-input-wrap"><span class="viab-prefix">R$</span><input type="number" id="vAvaliacao" step="0.01"></div></div>
+        <div class="viab-row"><label>Lance mínimo / preço Caixa</label><div class="viab-input-wrap"><span class="viab-prefix">R$</span><input type="number" id="vLanceMinimo" step="0.01"></div></div>
+      </div>
+
+      <div class="viab-section">
+        <h3>Negócio</h3>
+        <div class="viab-row"><label>Valor da compra/lance</label><div class="viab-input-wrap"><span class="viab-prefix">R$</span><input type="number" id="vValorCompra" step="0.01"></div></div>
+        <div class="viab-row"><label>Valor esperado de venda</label><div class="viab-input-wrap"><span class="viab-prefix">R$</span><input type="number" id="vValorVenda" step="0.01"></div></div>
+        <div class="viab-row"><label>Prazo estimado para venda (meses)</label><div class="viab-input-wrap"><input type="number" id="vPrazo" step="1"></div></div>
+        <div class="viab-row"><label>ROI mínimo esperado</label><div class="viab-input-wrap"><input type="number" id="vRoiMinimo" step="0.01"><span class="viab-prefix">%</span></div></div>
+        <div class="viab-row viab-output"><label>Comissão do leiloeiro</label><div class="viab-input-wrap"><input type="text" id="vComissaoLeiloeiro" disabled></div></div>
+      </div>
+
+      <div class="viab-section">
+        <h3>Despesas com documentação</h3>
+        <div class="viab-row"><label>Taxa ITBI</label><div class="viab-input-wrap"><input type="number" id="vTaxaItbi" step="0.01"><span class="viab-prefix">%</span></div></div>
+        <div class="viab-row viab-output"><label>Valor do ITBI</label><div class="viab-input-wrap"><input type="text" id="vValorItbi" disabled></div></div>
+        <div class="viab-row"><label>Registro</label><div class="viab-input-wrap"><span class="viab-prefix">R$</span><input type="number" id="vRegistro" step="0.01"></div></div>
+        <div class="viab-row"><label>Emolumentos, carta de arrematação e outros</label><div class="viab-input-wrap"><span class="viab-prefix">R$</span><input type="number" id="vEmolumentos" step="0.01"></div></div>
+        <div class="viab-row viab-output"><label>Total documentação</label><div class="viab-input-wrap"><input type="text" id="vTotalDocumentacao" disabled></div></div>
+      </div>
+
+      <div class="viab-section">
+        <h3>Manutenção e reforma</h3>
+        <div class="viab-row"><label>IPTU mensal</label><div class="viab-input-wrap"><span class="viab-prefix">R$</span><input type="number" id="vIptuMensal" step="0.01"></div></div>
+        <div class="viab-row"><label>Condomínio mensal</label><div class="viab-input-wrap"><span class="viab-prefix">R$</span><input type="number" id="vCondominioMensal" step="0.01"></div></div>
+        <div class="viab-row"><label>Despesas com reforma (R$/m²)</label><div class="viab-input-wrap"><span class="viab-prefix">R$</span><input type="number" id="vReformaPorM2" step="1"></div></div>
+        <div class="viab-row viab-output"><label>Despesas com reforma (total)</label><div class="viab-input-wrap"><input type="text" id="vReformaTotal" disabled></div></div>
+        <div class="viab-row viab-output"><label>Acumulado até a venda (IPTU+cond.)</label><div class="viab-input-wrap"><input type="text" id="vAcumuladoVenda" disabled></div></div>
+      </div>
+
+      <div class="viab-section">
+        <h3>Pagamento</h3>
+        <div class="viab-row">
+          <label>Financiamento habitacional</label>
+          <div class="viab-input-wrap"><select id="vFinanciamento"><option value="Não">Não</option><option value="Sim">Sim</option></select></div>
+        </div>
+        <div class="viab-row"><label>% de entrada</label><div class="viab-input-wrap"><input type="number" id="vPercEntrada" step="0.01"><span class="viab-prefix">%</span></div></div>
+        <div class="viab-row viab-output"><label>Valor da entrada</label><div class="viab-input-wrap"><input type="text" id="vValorEntrada" disabled></div></div>
+        <div class="viab-row viab-output"><label>Valor financiado</label><div class="viab-input-wrap"><input type="text" id="vValorFinanciado" disabled></div></div>
+        <div class="viab-row viab-output"><label>Parcela estimada</label><div class="viab-input-wrap"><input type="text" id="vParcela" disabled></div></div>
+        <div class="viab-row viab-output"><label>Saldo a pagar no prazo de venda</label><div class="viab-input-wrap"><input type="text" id="vSaldoPrazoVenda" disabled></div></div>
+      </div>
+
+      <div class="viab-section">
+        <h3>Despesas na venda e outras</h3>
+        <div class="viab-row"><label>Comissão corretor/imobiliária</label><div class="viab-input-wrap"><input type="number" id="vComissaoCorretor" step="0.01"><span class="viab-prefix">%</span></div></div>
+        <div class="viab-row viab-output"><label>Valor da comissão</label><div class="viab-input-wrap"><input type="text" id="vValorComissao" disabled></div></div>
+        <div class="viab-row"><label>Advogado</label><div class="viab-input-wrap"><span class="viab-prefix">R$</span><input type="number" id="vAdvogado" step="0.01"></div></div>
+        <div class="viab-row"><label>Assessoria especializada</label><div class="viab-input-wrap"><span class="viab-prefix">R$</span><input type="number" id="vAssessoria" step="0.01"></div></div>
+        <div class="viab-row"><label>Outras eventuais (dívidas IPTU/cond.)</label><div class="viab-input-wrap"><span class="viab-prefix">R$</span><input type="number" id="vOutrasEventuais" step="0.01"></div></div>
+        <div class="viab-row viab-output"><label>Total outras despesas</label><div class="viab-input-wrap"><input type="text" id="vTotalOutrasDespesas" disabled></div></div>
+        <div class="viab-row"><label>Alíquota do imposto de renda</label><div class="viab-input-wrap"><input type="number" id="vAliquotaIr" step="0.01"><span class="viab-prefix">%</span></div></div>
+        <div class="viab-row viab-output"><label>Valor do imposto de renda</label><div class="viab-input-wrap"><input type="text" id="vValorIr" disabled></div></div>
+      </div>
+
+      <div class="viab-section full">
+        <h3>Resumo</h3>
+        <div class="viab-row viab-output"><label>Capital à vista necessário</label><div class="viab-input-wrap"><input type="text" id="vCapitalVista" disabled></div></div>
+        <div class="viab-row viab-output"><label>Total de despesas</label><div class="viab-input-wrap"><input type="text" id="vTotalDespesas" disabled></div></div>
+        <div class="viab-row viab-output"><label>Receita líquida</label><div class="viab-input-wrap"><input type="text" id="vReceitaLiquida" disabled></div></div>
+        <div class="viab-row viab-output"><label>Lucro bruto</label><div class="viab-input-wrap"><input type="text" id="vLucroBruto" disabled></div></div>
+
+        <div class="viab-highlight">
+          <div class="viab-hl-item">
+            <div class="viab-hl-label">Lucro líquido estimado</div>
+            <div class="viab-hl-value" id="vHlLucro">—</div>
+          </div>
+          <div class="viab-hl-item">
+            <div class="viab-hl-label">ROI (lucro / capital à vista)</div>
+            <div class="viab-hl-value" id="vHlRoi">—</div>
+          </div>
+          <div class="viab-hl-item">
+            <div class="viab-hl-label">ROI mínimo esperado</div>
+            <div class="viab-hl-value" id="vHlRoiMin">—</div>
+          </div>
+        </div>
+        <div class="viab-note">
+          Estimativa baseada nos valores informados. Os campos com fundo destacado são editáveis; os demais são calculados automaticamente.
+          Esta calculadora não constitui recomendação de investimento — confirme sempre os valores e condições diretamente no edital do imóvel.
+        </div>
+      </div>
+
+    </div>
+  </div>
 </div>
 
 <div class="foot-note">
