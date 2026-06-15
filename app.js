@@ -603,12 +603,16 @@
   // Campos calculados: inputs com atributo "disabled" (atualizados via JS).
 
   const VIAB_INPUT_IDS = [
-    'vArea','vAvaliacao','vLanceMinimo','vValorCompra','vValorVenda','vPrazo','vRoiMinimo',
+    'vValorCompra','vValorVenda','vPrazo','vRoiMinimo',
     'vTaxaItbi','vRegistro','vEmolumentos',
     'vIptuMensal','vCondominioMensal','vReformaPorM2',
     'vFinanciamento','vPercEntrada',
-    'vComissaoCorretor','vAdvogado','vAssessoria','vOutrasEventuais','vAliquotaIr'
+    'vComissaoCorretor','vAdvogado','vAssessoria','vPercDividaCondominio','vPercDividaIptu','vAliquotaIr'
   ];
+
+  // área e avaliação do imóvel selecionado (valores numéricos, vêm da base oficial e são somente leitura no modal)
+  let viabCurrentArea = 0;
+  let viabCurrentAvaliacao = 0;
 
   function viabNum(id){
     const el = document.getElementById(id);
@@ -637,9 +641,11 @@
     document.getElementById('vModalidade').value = item.modalidade || '—';
 
     const areaRef = getAreaRef(item);
-    document.getElementById('vArea').value = areaRef || 0;
-    document.getElementById('vAvaliacao').value = item.avaliacao != null ? item.avaliacao : 0;
-    document.getElementById('vLanceMinimo').value = item.preco != null ? item.preco : 0;
+    viabCurrentArea = areaRef || 0;
+    viabCurrentAvaliacao = item.avaliacao != null ? item.avaliacao : 0;
+    document.getElementById('vArea').value = areaRef ? `${fmtNum(areaRef,2)} m²` : '—';
+    document.getElementById('vAvaliacao').value = fmtBRL(item.avaliacao);
+    document.getElementById('vLanceMinimo').value = fmtBRL(item.preco);
 
     // negócio: pré-preenche valor de compra com o preço/lance da Caixa,
     // e valor esperado de venda com o valor de avaliação (ponto de partida editável)
@@ -666,8 +672,9 @@
     document.getElementById('vComissaoCorretor').value = 6;
     document.getElementById('vAdvogado').value = 0;
     document.getElementById('vAssessoria').value = 0;
-    // "outras eventuais" sugerido como 20% do valor de avaliação, igual à planilha original
-    document.getElementById('vOutrasEventuais').value = item.avaliacao != null ? Math.round(item.avaliacao * 0.2 * 100) / 100 : 0;
+    // "dívidas eventuais": 10% do valor de avaliação para condomínio + 10% para IPTU (editável)
+    document.getElementById('vPercDividaCondominio').value = 10;
+    document.getElementById('vPercDividaIptu').value = 10;
     document.getElementById('vAliquotaIr').value = 15;
 
     const subtitleParts = [];
@@ -711,7 +718,7 @@
     const iptuMensal = viabNum('vIptuMensal');           // F12
     const condominioMensal = viabNum('vCondominioMensal'); // F13
     const reformaPorM2 = viabNum('vReformaPorM2');       // 350 na planilha
-    const area = viabNum('vArea');                       // B11
+    const area = viabCurrentArea;                        // B11 (somente leitura, vem da base)
     const reformaTotal = area * reformaPorM2;            // F16
     const acumuladoVenda = (iptuMensal + condominioMensal) * prazo; // B42
     viabSetOutput('vReformaTotal', reformaTotal);
@@ -740,7 +747,16 @@
     // --- Outras despesas ---
     const advogado = viabNum('vAdvogado');           // F23
     const assessoria = viabNum('vAssessoria');       // F24
-    const outrasEventuais = viabNum('vOutrasEventuais'); // F25
+
+    // dívidas eventuais: percentual do valor de avaliação, configurável (default 10% + 10%)
+    const percDividaCondominio = viabNum('vPercDividaCondominio') / 100;
+    const percDividaIptu = viabNum('vPercDividaIptu') / 100;
+    const valorDividaCondominio = percDividaCondominio * viabCurrentAvaliacao;
+    const valorDividaIptu = percDividaIptu * viabCurrentAvaliacao;
+    viabSetOutput('vValorDividaCondominio', valorDividaCondominio);
+    viabSetOutput('vValorDividaIptu', valorDividaIptu);
+
+    const outrasEventuais = valorDividaCondominio + valorDividaIptu; // F25
     const totalOutrasDespesas = advogado + assessoria + outrasEventuais; // F26
     viabSetOutput('vTotalOutrasDespesas', totalOutrasDespesas);
 

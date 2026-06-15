@@ -1049,9 +1049,9 @@
         <div class="viab-row"><label>Tipo de imóvel</label><div class="viab-input-wrap"><input type="text" id="vTipo" disabled></div></div>
         <div class="viab-row"><label>Cidade/UF</label><div class="viab-input-wrap"><input type="text" id="vCidade" disabled></div></div>
         <div class="viab-row"><label>Modalidade de venda</label><div class="viab-input-wrap"><input type="text" id="vModalidade" disabled></div></div>
-        <div class="viab-row"><label>Área (m²)</label><div class="viab-input-wrap"><input type="number" id="vArea" step="0.01"></div></div>
-        <div class="viab-row"><label>Valor de avaliação</label><div class="viab-input-wrap"><span class="viab-prefix">R$</span><input type="number" id="vAvaliacao" step="0.01"></div></div>
-        <div class="viab-row"><label>Lance mínimo / preço Caixa</label><div class="viab-input-wrap"><span class="viab-prefix">R$</span><input type="number" id="vLanceMinimo" step="0.01"></div></div>
+        <div class="viab-row viab-output"><label>Área (m²)</label><div class="viab-input-wrap"><input type="text" id="vArea" disabled></div></div>
+        <div class="viab-row viab-output"><label>Valor de avaliação</label><div class="viab-input-wrap"><input type="text" id="vAvaliacao" disabled></div></div>
+        <div class="viab-row viab-output"><label>Lance mínimo / preço Caixa</label><div class="viab-input-wrap"><input type="text" id="vLanceMinimo" disabled></div></div>
       </div>
 
       <div class="viab-section">
@@ -1100,7 +1100,10 @@
         <div class="viab-row viab-output"><label>Valor da comissão</label><div class="viab-input-wrap"><input type="text" id="vValorComissao" disabled></div></div>
         <div class="viab-row"><label>Advogado</label><div class="viab-input-wrap"><span class="viab-prefix">R$</span><input type="number" id="vAdvogado" step="0.01"></div></div>
         <div class="viab-row"><label>Assessoria especializada</label><div class="viab-input-wrap"><span class="viab-prefix">R$</span><input type="number" id="vAssessoria" step="0.01"></div></div>
-        <div class="viab-row"><label>Outras eventuais (dívidas IPTU/cond.)</label><div class="viab-input-wrap"><span class="viab-prefix">R$</span><input type="number" id="vOutrasEventuais" step="0.01"></div></div>
+        <div class="viab-row"><label>Dívidas de condomínio</label><div class="viab-input-wrap"><input type="number" id="vPercDividaCondominio" step="0.01"><span class="viab-prefix">%</span></div></div>
+        <div class="viab-row viab-output"><label>Valor — dívidas de condomínio</label><div class="viab-input-wrap"><input type="text" id="vValorDividaCondominio" disabled></div></div>
+        <div class="viab-row"><label>Dívidas de IPTU</label><div class="viab-input-wrap"><input type="number" id="vPercDividaIptu" step="0.01"><span class="viab-prefix">%</span></div></div>
+        <div class="viab-row viab-output"><label>Valor — dívidas de IPTU</label><div class="viab-input-wrap"><input type="text" id="vValorDividaIptu" disabled></div></div>
         <div class="viab-row viab-output"><label>Total outras despesas</label><div class="viab-input-wrap"><input type="text" id="vTotalOutrasDespesas" disabled></div></div>
         <div class="viab-row"><label>Alíquota do imposto de renda</label><div class="viab-input-wrap"><input type="number" id="vAliquotaIr" step="0.01"><span class="viab-prefix">%</span></div></div>
         <div class="viab-row viab-output"><label>Valor do imposto de renda</label><div class="viab-input-wrap"><input type="text" id="vValorIr" disabled></div></div>
