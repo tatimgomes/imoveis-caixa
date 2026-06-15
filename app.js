@@ -249,39 +249,6 @@
   /* ============ KPIs ============ */
   function renderKPIs(){
     document.getElementById('resultCount').textContent = FILTERED.length.toLocaleString('pt-BR');
-    document.getElementById('kpiTotal').textContent = FILTERED.length.toLocaleString('pt-BR');
-    document.getElementById('kpiTotalSub').textContent = `de ${DATA.length.toLocaleString('pt-BR')} na base`;
-
-    if (FILTERED.length === 0){
-      document.getElementById('kpiDesconto').textContent = '—';
-      document.getElementById('kpiPreco').textContent = '—';
-      document.getElementById('kpiPrecoSub').textContent = 'faixa: —';
-      document.getElementById('kpiM2').textContent = '—';
-      document.getElementById('kpiM2Sub').textContent = '—';
-      return;
-    }
-
-    const descontos = FILTERED.map(d=>d.desconto).filter(v=>v!=null);
-    const avgDesconto = descontos.length ? descontos.reduce((a,b)=>a+b,0)/descontos.length : null;
-    document.getElementById('kpiDesconto').textContent = fmtPct(avgDesconto);
-
-    const precos = FILTERED.map(d=>d.preco).filter(v=>v!=null);
-    const avgPreco = precos.length ? precos.reduce((a,b)=>a+b,0)/precos.length : null;
-    document.getElementById('kpiPreco').textContent = fmtBRL0(avgPreco);
-    if (precos.length){
-      document.getElementById('kpiPrecoSub').textContent = `faixa: ${fmtBRL0(Math.min(...precos))} – ${fmtBRL0(Math.max(...precos))}`;
-    }
-
-    const withArea = FILTERED.filter(d=>getAreaRef(d) != null && d.preco != null);
-    if (withArea.length){
-      const m2vals = withArea.map(d=>d.preco/getAreaRef(d));
-      const avgM2 = m2vals.reduce((a,b)=>a+b,0)/m2vals.length;
-      document.getElementById('kpiM2').textContent = fmtBRL0(avgM2);
-      document.getElementById('kpiM2Sub').textContent = `${withArea.length.toLocaleString('pt-BR')} imóveis com área informada (privativa, ou total quando não há privativa)`;
-    } else {
-      document.getElementById('kpiM2').textContent = '—';
-      document.getElementById('kpiM2Sub').textContent = 'sem dados de área no filtro atual';
-    }
   }
 
   /* ============ RANKING ============ */
@@ -419,6 +386,41 @@
     return arr;
   }
 
+  /* ============ BARRA DE ROLAGEM HORIZONTAL STICKY ============
+     A tabela tem rolagem horizontal própria, mas em telas onde a tabela
+     fica mais alta que a viewport, a barra de rolagem nativa (no fundo
+     do .table-wrap) sai de vista. Esta barra extra fica fixa (sticky)
+     na parte inferior da tela e fica sincronizada com o scroll real. */
+  let tableScrollbarBound = false;
+
+  function syncTableScrollbar(){
+    const wrap = document.getElementById('tableWrap');
+    const sticky = document.getElementById('tableScrollbarSticky');
+    const inner = document.getElementById('tableScrollbarStickyInner');
+    if (!wrap || !sticky || !inner) return;
+
+    const table = wrap.querySelector('table');
+    const contentWidth = table ? table.scrollWidth : wrap.scrollWidth;
+    inner.style.width = contentWidth + 'px';
+
+    // esconde a barra extra se não há overflow horizontal a rolar
+    if (contentWidth <= wrap.clientWidth + 1){
+      sticky.classList.add('hidden');
+    } else {
+      sticky.classList.remove('hidden');
+    }
+
+    // mantém a posição de scroll sincronizada na primeira renderização
+    sticky.scrollLeft = wrap.scrollLeft;
+
+    if (!tableScrollbarBound){
+      wrap.addEventListener('scroll', ()=>{ sticky.scrollLeft = wrap.scrollLeft; });
+      sticky.addEventListener('scroll', ()=>{ wrap.scrollLeft = sticky.scrollLeft; });
+      window.addEventListener('resize', syncTableScrollbar);
+      tableScrollbarBound = true;
+    }
+  }
+
   function renderTable(){
     const arr = sortedData();
     const totalPages = Math.max(1, Math.ceil(arr.length / PAGE_SIZE));
@@ -468,6 +470,7 @@
       arr.length ? `Mostrando ${start+1}–${Math.min(start+PAGE_SIZE, arr.length)} de ${arr.length.toLocaleString('pt-BR')}` : 'Nenhum resultado';
 
     renderPager(totalPages);
+    syncTableScrollbar();
   }
 
   function renderPager(totalPages){

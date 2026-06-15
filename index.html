@@ -397,42 +397,6 @@
     min-width: 0;
   }
 
-  /* ---- KPI STRIP ---- */
-  .kpi-strip{
-    display:grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1px;
-    background: var(--line);
-    border: 1px solid var(--line);
-    margin-bottom: 28px;
-  }
-  @media (max-width: 760px){
-    .kpi-strip{ grid-template-columns: repeat(2, 1fr); }
-  }
-  .kpi{
-    background: var(--paper);
-    padding: 18px 16px;
-  }
-  .kpi .kpi-label{
-    font-family: var(--mono);
-    font-size: 10.5px;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--moss);
-    margin-bottom: 6px;
-  }
-  .kpi .kpi-value{
-    font-family: var(--serif);
-    font-size: 28px;
-    font-weight: 800;
-    letter-spacing: -0.01em;
-  }
-  .kpi .kpi-sub{
-    font-size: 11.5px;
-    opacity: 0.6;
-    margin-top: 2px;
-  }
-
   /* ---- SECTION HEADERS ---- */
   .section-head{
     display:flex;
@@ -564,6 +528,27 @@
     border: 1px solid var(--line);
     overflow-x: auto;
     background: #fff;
+  }
+
+  /* barra de rolagem horizontal fixa na parte inferior da tela,
+     sincronizada com o scroll da tabela — útil quando a tabela
+     fica mais alta que a viewport e a barra normal sai de vista */
+  .table-scrollbar-sticky{
+    position: sticky;
+    bottom: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    height: 14px;
+    background: var(--paper-2);
+    border: 1px solid var(--line);
+    border-top: none;
+    z-index: 5;
+  }
+  .table-scrollbar-sticky.hidden{
+    display: none;
+  }
+  .table-scrollbar-sticky-inner{
+    height: 1px;
   }
   table{
     width: 100%;
@@ -1002,29 +987,6 @@
 
   <main class="content">
 
-    <div class="kpi-strip" id="kpiStrip">
-      <div class="kpi">
-        <div class="kpi-label">Imóveis no filtro</div>
-        <div class="kpi-value" id="kpiTotal">0</div>
-        <div class="kpi-sub" id="kpiTotalSub">de 0 na base</div>
-      </div>
-      <div class="kpi">
-        <div class="kpi-label">Desconto médio</div>
-        <div class="kpi-value" id="kpiDesconto">0%</div>
-        <div class="kpi-sub">vs. valor de avaliação</div>
-      </div>
-      <div class="kpi">
-        <div class="kpi-label">Preço médio</div>
-        <div class="kpi-value" id="kpiPreco">R$ 0</div>
-        <div class="kpi-sub" id="kpiPrecoSub">faixa: —</div>
-      </div>
-      <div class="kpi">
-        <div class="kpi-label">Preço médio / m²</div>
-        <div class="kpi-value" id="kpiM2">R$ 0</div>
-        <div class="kpi-sub" id="kpiM2Sub">considerando imóveis com área informada</div>
-      </div>
-    </div>
-
     <div class="section-head">
       <h3><span class="num">1</span> Maiores descontos</h3>
       <div class="section-note">Os 12 imóveis com maior desconto sobre o valor de avaliação, dentro dos filtros aplicados.</div>
@@ -1044,13 +1006,16 @@
         </select>
       </div>
     </div>
-    <div class="table-wrap">
+    <div class="table-wrap" id="tableWrap">
       <table>
         <thead>
           <tr id="tableHeadRow"></tr>
         </thead>
         <tbody id="tableBody"></tbody>
       </table>
+    </div>
+    <div class="table-scrollbar-sticky" id="tableScrollbarSticky">
+      <div class="table-scrollbar-sticky-inner" id="tableScrollbarStickyInner"></div>
     </div>
     <div class="table-foot">
       <div id="pageInfo">—</div>
