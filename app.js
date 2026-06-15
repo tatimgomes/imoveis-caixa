@@ -13,136 +13,6 @@
   const fmtPct = (v) => v == null ? '—' : (Number(v)*100).toLocaleString('pt-BR', {minimumFractionDigits:1, maximumFractionDigits:1}) + '%';
   const fmtNum = (v, dec=0) => v == null ? '—' : Number(v).toLocaleString('pt-BR', {minimumFractionDigits:dec, maximumFractionDigits:dec});
 
-  /* ============ CSV PARSER ============
-     Formato esperado (igual ao oficial da Caixa):
-     Linha 1: título / data de geração
-     Linha 2: cabeçalhos separados por ';'
-     Linhas seguintes: dados separados por ';'
-     Encoding: ISO-8859-1 (latin1) ou UTF-8 — detectamos pelo BOM/heurística
-  */
-  function parseCaixaCSV(text){
-    // normaliza quebras de linha
-    const lines = text.split(/\r\n|\r|\n/).filter(l => l.trim().length > 0);
-    if (lines.length < 2) throw new Error('Arquivo vazio ou em formato inesperado.');
-
-    // tenta achar a data de geração na primeira linha
-    let genDate = null;
-    const dateMatch = lines[0].match(/(\d{2}\/\d{2}\/\d{4})/);
-    if (dateMatch) genDate = dateMatch[1];
-
-    // acha a linha de cabeçalho (contém "N° do imóvel" ou "UF;Cidade")
-    let headerIdx = -1;
-    for (let i=0; i<Math.min(lines.length, 5); i++){
-      if (/UF;\s*Cidade|N[°ºo]\s*do\s*im[oó]vel/i.test(lines[i])){
-        headerIdx = i;
-        break;
-      }
-    }
-    if (headerIdx === -1) headerIdx = 1; // fallback: assume linha 2
-
-    const headers = lines[headerIdx].split(';').map(h => h.trim().toLowerCase());
-
-    const colIndex = (names) => {
-      for (const name of names){
-        const idx = headers.findIndex(h => h.includes(name));
-        if (idx !== -1) return idx;
-      }
-      return -1;
-    };
-
-    const idx = {
-      cod: colIndex(['imóvel','imovel']),
-      uf: colIndex(['uf']),
-      cidade: colIndex(['cidade']),
-      bairro: colIndex(['bairro']),
-      endereco: colIndex(['endereço','endereco']),
-      preco: colIndex(['preço','preco']),
-      avaliacao: colIndex(['avaliação','avaliacao']),
-      desconto: colIndex(['desconto']),
-      financiamento: colIndex(['financiamento']),
-      descricao: colIndex(['descrição','descricao']),
-      modalidade: colIndex(['modalidade']),
-      link: colIndex(['link'])
-    };
-
-    if (idx.cod === -1 || idx.preco === -1 || idx.cidade === -1){
-      throw new Error('Não foi possível identificar as colunas esperadas no arquivo. Verifique se o formato é o mesmo do CSV da Caixa.');
-    }
-
-    const parseBRNumber = (s) => {
-      if (s == null) return null;
-      s = String(s).trim();
-      if (s === '' || s === '-') return null;
-      s = s.replace(/\./g, '').replace(',', '.');
-      const n = parseFloat(s);
-      return isNaN(n) ? null : n;
-    };
-
-    const parseDescricao = (desc) => {
-      const out = { tipo:'', area:null, area_priv:null, quartos:null, vagas:null };
-      if (!desc) return out;
-      out.tipo = desc.split(',')[0].trim();
-      let m = desc.match(/([\d]+\.[\d]+|\d+)\s*de\s*área\s*total/i) || desc.match(/([\d]+\.[\d]+|\d+)\s*de\s*area\s*total/i);
-      if (m) out.area = parseFloat(m[1]);
-      m = desc.match(/([\d]+\.[\d]+|\d+)\s*de\s*área\s*privativa/i) || desc.match(/([\d]+\.[\d]+|\d+)\s*de\s*area\s*privativa/i);
-      if (m) out.area_priv = parseFloat(m[1]);
-      m = desc.match(/(\d+)\s*qto/i);
-      if (m) out.quartos = parseInt(m[1], 10);
-      m = desc.match(/(\d+)\s*vaga/i);
-      if (m) out.vagas = parseInt(m[1], 10);
-      return out;
-    };
-
-    const out = [];
-    for (let i = headerIdx+1; i < lines.length; i++){
-      const cols = lines[i].split(';');
-      if (cols.length < 3) continue;
-      const codRaw = (cols[idx.cod] || '').trim();
-      if (!codRaw || !/\d/.test(codRaw)) continue;
-
-      const desc = idx.descricao !== -1 ? (cols[idx.descricao] || '').trim() : '';
-      const parsedDesc = parseDescricao(desc);
-
-      let descontoRaw = idx.desconto !== -1 ? (cols[idx.desconto]||'').trim() : '';
-      let desconto = null;
-      if (descontoRaw !== ''){
-        desconto = parseFloat(descontoRaw.replace(',', '.'));
-        if (!isNaN(desconto)) desconto = desconto / 100;
-        else desconto = null;
-      }
-
-      out.push({
-        cod: codRaw.replace(/\D/g,''),
-        uf: idx.uf !== -1 ? (cols[idx.uf]||'').trim() : '',
-        cidade: (cols[idx.cidade]||'').trim(),
-        bairro: idx.bairro !== -1 ? (cols[idx.bairro]||'').trim() : '',
-        endereco: idx.endereco !== -1 ? (cols[idx.endereco]||'').trim() : '',
-        tipo: parsedDesc.tipo,
-        area: parsedDesc.area,
-        area_priv: parsedDesc.area_priv,
-        quartos: parsedDesc.quartos,
-        vagas: parsedDesc.vagas,
-        preco: parseBRNumber(cols[idx.preco]),
-        avaliacao: idx.avaliacao !== -1 ? parseBRNumber(cols[idx.avaliacao]) : null,
-        desconto: desconto,
-        financiamento: idx.financiamento !== -1 ? (cols[idx.financiamento]||'').trim() : '',
-        modalidade: idx.modalidade !== -1 ? (cols[idx.modalidade]||'').trim() : '',
-        link: idx.link !== -1 ? (cols[idx.link]||'').trim() : ''
-      });
-    }
-
-    return { rows: out, genDate };
-  }
-
-  /* tenta decodificar como UTF-8; se aparecerem caracteres de replacement, tenta latin1 */
-  function decodeFile(arrayBuffer){
-    const utf8 = new TextDecoder('utf-8').decode(arrayBuffer);
-    if (utf8.includes('\uFFFD')){
-      return new TextDecoder('iso-8859-1').decode(arrayBuffer);
-    }
-    return utf8;
-  }
-
   /* ============ MULTISELECT (componente customizado) ============ */
   // estado: cada multiselect guarda os valores selecionados em um Set
   const MS_STATE = {
@@ -685,7 +555,9 @@
           if (index.generated_at){
             try {
               const d = new Date(index.generated_at);
-              updatedLabel = ` · atualizado em ${d.toLocaleDateString('pt-BR')}`;
+              const dataStr = d.toLocaleDateString('pt-BR');
+              const horaStr = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+              updatedLabel = ` · última atualização: ${dataStr} às ${horaStr}`;
             } catch(e){}
           }
           setLoadedData(items, dateLabel,
@@ -700,47 +572,9 @@
             `<span style="color:var(--clay)">●</span> Base de exemplo (offline) — <span class="file-name">${FALLBACK_DATA.length.toLocaleString('pt-BR')} imóveis · não foi possível carregar a base online</span>`
           );
         } else {
-          setLoadedData([], '—', `<span style="color:var(--bad)">●</span> Não foi possível carregar dados. Carregue um CSV manualmente.`);
+          setLoadedData([], '—', `<span style="color:var(--bad)">●</span> Não foi possível carregar os dados. Clique em "Atualizar dados" para tentar novamente.`);
         }
       });
-  }
-
-  function loadCSVFile(file){
-    document.getElementById('loadingOverlay').classList.remove('hidden');
-    document.getElementById('loadingText').textContent = 'Lendo arquivo…';
-
-    const reader = new FileReader();
-    reader.onload = function(e){
-      try {
-        const text = decodeFile(e.target.result);
-        document.getElementById('loadingText').textContent = 'Processando registros…';
-        setTimeout(()=>{
-          try {
-            const { rows, genDate } = parseCaixaCSV(text);
-            if (rows.length === 0) throw new Error('Nenhum imóvel encontrado no arquivo.');
-            DATA = rows;
-            document.getElementById('genDate').textContent = genDate || '—';
-            document.getElementById('sourceStatus').innerHTML =
-              `<span class="ok">●</span> Base carregada — <span class="file-name">${escapeHtml(file.name)} · ${DATA.length.toLocaleString('pt-BR')} imóveis</span>`;
-            populateSelects();
-            resetFilterInputs();
-            applyFilters();
-          } catch(err){
-            alert('Erro ao processar o arquivo: ' + err.message);
-          } finally {
-            document.getElementById('loadingOverlay').classList.add('hidden');
-          }
-        }, 50);
-      } catch(err){
-        document.getElementById('loadingOverlay').classList.add('hidden');
-        alert('Erro ao ler o arquivo: ' + err.message);
-      }
-    };
-    reader.onerror = function(){
-      document.getElementById('loadingOverlay').classList.add('hidden');
-      alert('Não foi possível ler o arquivo.');
-    };
-    reader.readAsArrayBuffer(file);
   }
 
   function resetFilterInputs(){
@@ -781,14 +615,6 @@
       applyFilters();
     });
 
-    document.getElementById('btnLoadFile').addEventListener('click', ()=>{
-      document.getElementById('fileInput').click();
-    });
-    document.getElementById('fileInput').addEventListener('change', (e)=>{
-      const file = e.target.files[0];
-      if (file) loadCSVFile(file);
-    });
-
     document.getElementById('btnReset').addEventListener('click', ()=>{
       resetFilterInputs();
       loadOnlineData();
@@ -806,6 +632,6 @@
     buildMultiselect('msTipo');
     buildMultiselect('msModalidade');
     bindEvents();
-    render(); // mostra estado vazio inicial (KPIs zerados, tabela/ranking vazios)
+    loadOnlineData();
   });
 })();

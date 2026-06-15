@@ -144,7 +144,6 @@
     color: var(--ink);
     opacity: 0.7;
   }
-  #fileInput{ display:none; }
 
   /* ============ LAYOUT ============ */
   .layout{
@@ -691,17 +690,15 @@
     </div>
     <div class="date-block">
       <b id="genDate">—</b>
-      data de geração da base
+      data de referência da Caixa
     </div>
   </div>
 </header>
 
 <div class="source-bar">
   <span class="src-label">Base ativa</span>
-  <span class="src-status" id="sourceStatus">Nenhum dado carregado ainda. Clique em "Carregar base de imóveis" para buscar a base atualizada.</span>
-  <button class="btn primary" id="btnReset">Carregar base de imóveis</button>
-  <button class="btn" id="btnLoadFile">Carregar CSV (.csv)</button>
-  <input type="file" id="fileInput" accept=".csv">
+  <span class="src-status" id="sourceStatus">Carregando base de imóveis…</span>
+  <button class="btn" id="btnReset">Atualizar dados</button>
 </div>
 
 <div class="layout">
@@ -837,8 +834,7 @@
 <div class="foot-note">
   Fonte dos dados: lista de imóveis disponibilizada publicamente pela Caixa Econômica Federal (venda-imoveis.caixa.gov.br).
   Os valores de preço de venda e avaliação são informativos — confirme sempre as condições atualizadas diretamente no site oficial antes de qualquer decisão.
-  A base é atualizada automaticamente uma vez por semana a partir do arquivo oficial da Caixa (todos os estados).
-  Para usar uma base própria, carregue um CSV pelo botão "Carregar CSV" acima — o arquivo precisa seguir o mesmo formato (separador ";", colunas: N° do imóvel, UF, Cidade, Bairro, Endereço, Preço, Valor de avaliação, Desconto, Financiamento, Descrição, Modalidade de venda, Link de acesso).
+  A base é atualizada automaticamente uma vez por semana a partir do arquivo oficial da Caixa (todos os estados). Use o botão "Atualizar dados" para forçar uma nova busca.
 </div>
 
 <script>
