@@ -66,8 +66,4 @@ Isso baixa o CSV mais recente da Caixa e regenera `data.json`. Depois,
 suba o arquivo atualizado para o Netlify (arrastando a pasta novamente em
 app.netlify.com/drop, ou via git push, se conectado a um repositório).
 
-## Carregar uma base própria
 
-O botão **"Carregar CSV"** no painel permite carregar manualmente qualquer
-CSV no mesmo formato do arquivo oficial da Caixa (separador `;`, mesmas
-colunas), sem afetar a base online.
