@@ -15,6 +15,7 @@ from datetime import datetime, timezone
 
 CSV_URL = "https://venda-imoveis.caixa.gov.br/listaweb/Lista_imoveis_geral.csv"
 OUTPUT_PATH = "data.json"
+DATA_DIR = "data"
 
 KEY_MAP = {
     "n_imovel": "cod",
@@ -177,19 +178,36 @@ def main():
     rows, gen_date = parse_csv(text)
 
     if not rows:
-        raise SystemExit("Nenhum imóvel encontrado no CSV — abortando para não sobrescrever data.json.")
+        raise SystemExit("Nenhum imóvel encontrado no CSV — abortando para não sobrescrever a base atual.")
 
-    payload = {
+    # agrupa por UF para manter cada arquivo pequeno (uploads e fetch mais leves)
+    by_uf = {}
+    for row in rows:
+        by_uf.setdefault(row["uf"] or "—", []).append(row)
+
+    import os
+    os.makedirs(DATA_DIR, exist_ok=True)
+
+    ufs_meta = []
+    for uf in sorted(by_uf.keys()):
+        items = by_uf[uf]
+        fname = f"{uf}.json"
+        with open(os.path.join(DATA_DIR, fname), "w", encoding="utf-8") as f:
+            json.dump(items, f, ensure_ascii=False, separators=(",", ":"))
+        ufs_meta.append({"uf": uf, "count": len(items), "file": f"{DATA_DIR}/{fname}"})
+
+    index = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "source_date": gen_date,
-        "count": len(rows),
-        "items": rows,
+        "total_count": len(rows),
+        "ufs": ufs_meta,
     }
 
     with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
-        json.dump(payload, f, ensure_ascii=False, separators=(",", ":"))
+        json.dump(index, f, ensure_ascii=False, separators=(",", ":"))
 
-    print(f"OK: {len(rows)} imóveis salvos em {OUTPUT_PATH} (data de geração da fonte: {gen_date})", file=sys.stderr)
+    print(f"OK: {len(rows)} imóveis em {len(ufs_meta)} arquivos (pasta {DATA_DIR}/) "
+          f"+ índice {OUTPUT_PATH} (data de geração da fonte: {gen_date})", file=sys.stderr)
 
 
 if __name__ == "__main__":

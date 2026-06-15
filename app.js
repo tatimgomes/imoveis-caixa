@@ -650,30 +650,51 @@
   }
 
   function loadOnlineData(){
-    document.getElementById('sourceStatus').innerHTML = 'Carregando base atualizada…';
+    document.getElementById('sourceStatus').innerHTML = 'Carregando índice da base…';
 
     fetch('./data.json', { cache: 'no-store' })
       .then(resp => {
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
         return resp.json();
       })
-      .then(payload => {
-        const items = payload.items || [];
-        if (!items.length) throw new Error('Base online vazia.');
-        const dateLabel = payload.source_date || '—';
-        let updatedLabel = '';
-        if (payload.generated_at){
-          try {
-            const d = new Date(payload.generated_at);
-            updatedLabel = ` · atualizado em ${d.toLocaleDateString('pt-BR')}`;
-          } catch(e){}
-        }
-        setLoadedData(items, dateLabel,
-          `<span class="ok">●</span> Base online (Brasil) — <span class="file-name">${items.length.toLocaleString('pt-BR')} imóveis${updatedLabel}</span>`
+      .then(index => {
+        const ufs = index.ufs || [];
+        if (!ufs.length) throw new Error('Índice da base vazio.');
+
+        document.getElementById('sourceStatus').innerHTML =
+          `Carregando dados de ${ufs.length} estados… (0/${ufs.length})`;
+
+        let loaded = 0;
+        const fetches = ufs.map(entry =>
+          fetch('./' + entry.file, { cache: 'no-store' })
+            .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status + ' em ' + entry.file); return r.json(); })
+            .then(items => {
+              loaded++;
+              document.getElementById('sourceStatus').innerHTML =
+                `Carregando dados de ${ufs.length} estados… (${loaded}/${ufs.length})`;
+              return items;
+            })
         );
+
+        return Promise.all(fetches).then(arraysOfItems => {
+          const items = arraysOfItems.flat();
+          if (!items.length) throw new Error('Base online vazia.');
+
+          const dateLabel = index.source_date || '—';
+          let updatedLabel = '';
+          if (index.generated_at){
+            try {
+              const d = new Date(index.generated_at);
+              updatedLabel = ` · atualizado em ${d.toLocaleDateString('pt-BR')}`;
+            } catch(e){}
+          }
+          setLoadedData(items, dateLabel,
+            `<span class="ok">●</span> Base online (Brasil) — <span class="file-name">${items.length.toLocaleString('pt-BR')} imóveis${updatedLabel}</span>`
+          );
+        });
       })
       .catch(err => {
-        console.warn('Falha ao carregar data.json, usando base de exemplo embutida:', err);
+        console.warn('Falha ao carregar a base online, usando base de exemplo embutida:', err);
         if (FALLBACK_DATA.length){
           setLoadedData(FALLBACK_DATA, '—',
             `<span style="color:var(--clay)">●</span> Base de exemplo (offline) — <span class="file-name">${FALLBACK_DATA.length.toLocaleString('pt-BR')} imóveis · não foi possível carregar a base online</span>`
