@@ -774,6 +774,33 @@
     font-weight: 600;
   }
 
+  .viab-row.viab-key{
+    background: var(--clay-soft);
+    margin: 6px -10px;
+    padding: 10px 10px;
+    border-radius: 2px;
+  }
+  .viab-row.viab-key label{
+    font-weight: 800;
+    font-size: 13.5px;
+    color: var(--moss-deep);
+  }
+  .viab-row.viab-key .viab-input-wrap{
+    width: 170px;
+  }
+  .viab-row.viab-key input{
+    border: 1.5px solid var(--clay);
+    background: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    padding: 8px 10px;
+  }
+  .viab-row.viab-key .viab-prefix{
+    font-weight: 700;
+    opacity: 0.8;
+    color: var(--clay);
+  }
+
   .viab-highlight{
     margin-top: 16px;
     border: 1.5px solid var(--ink);
@@ -1046,9 +1073,9 @@
 
       <div class="viab-section">
         <h3>Descrição da oportunidade</h3>
-        <div class="viab-row"><label>Tipo de imóvel</label><div class="viab-input-wrap"><input type="text" id="vTipo" disabled></div></div>
-        <div class="viab-row"><label>Cidade/UF</label><div class="viab-input-wrap"><input type="text" id="vCidade" disabled></div></div>
-        <div class="viab-row"><label>Modalidade de venda</label><div class="viab-input-wrap"><input type="text" id="vModalidade" disabled></div></div>
+        <div class="viab-row viab-output"><label>Tipo de imóvel</label><div class="viab-input-wrap"><input type="text" id="vTipo" disabled></div></div>
+        <div class="viab-row viab-output"><label>Cidade/UF</label><div class="viab-input-wrap"><input type="text" id="vCidade" disabled></div></div>
+        <div class="viab-row viab-output"><label>Modalidade de venda</label><div class="viab-input-wrap"><input type="text" id="vModalidade" disabled></div></div>
         <div class="viab-row viab-output"><label>Área (m²)</label><div class="viab-input-wrap"><input type="text" id="vArea" disabled></div></div>
         <div class="viab-row viab-output"><label>Valor de avaliação</label><div class="viab-input-wrap"><input type="text" id="vAvaliacao" disabled></div></div>
         <div class="viab-row viab-output"><label>Lance mínimo / preço Caixa</label><div class="viab-input-wrap"><input type="text" id="vLanceMinimo" disabled></div></div>
@@ -1056,8 +1083,8 @@
 
       <div class="viab-section">
         <h3>Negócio</h3>
-        <div class="viab-row"><label>Valor da compra/lance</label><div class="viab-input-wrap"><span class="viab-prefix">R$</span><input type="number" id="vValorCompra" step="0.01"></div></div>
-        <div class="viab-row"><label>Valor esperado de venda</label><div class="viab-input-wrap"><span class="viab-prefix">R$</span><input type="number" id="vValorVenda" step="0.01"></div></div>
+        <div class="viab-row viab-key"><label>Valor da compra/lance</label><div class="viab-input-wrap"><span class="viab-prefix">R$</span><input type="number" id="vValorCompra" step="0.01"></div></div>
+        <div class="viab-row viab-key"><label>Valor esperado de venda</label><div class="viab-input-wrap"><span class="viab-prefix">R$</span><input type="number" id="vValorVenda" step="0.01"></div></div>
         <div class="viab-row"><label>Prazo estimado para venda (meses)</label><div class="viab-input-wrap"><input type="number" id="vPrazo" step="1"></div></div>
         <div class="viab-row"><label>ROI mínimo esperado</label><div class="viab-input-wrap"><input type="number" id="vRoiMinimo" step="0.01"><span class="viab-prefix">%</span></div></div>
         <div class="viab-row viab-output"><label>Comissão do leiloeiro</label><div class="viab-input-wrap"><input type="text" id="vComissaoLeiloeiro" disabled></div></div>
