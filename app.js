@@ -425,7 +425,9 @@
       .slice(0, 12);
 
     if (ranked.length === 0){
-      grid.innerHTML = '<div class="empty-state">Nenhum imóvel encontrado com os filtros atuais.</div>';
+      grid.innerHTML = DATA.length === 0
+        ? '<div class="empty-state">Nenhum dado carregado. Clique em "Carregar base de imóveis" no topo da página.</div>'
+        : '<div class="empty-state">Nenhum imóvel encontrado com os filtros atuais.</div>';
       return;
     }
 
@@ -557,7 +559,10 @@
     tbody.innerHTML = '';
 
     if (pageItems.length === 0){
-      tbody.innerHTML = `<tr><td colspan="${TABLE_COLUMNS.length}"><div class="empty-state">Nenhum imóvel encontrado com os filtros atuais.</div></td></tr>`;
+      const msg = DATA.length === 0
+        ? 'Nenhum dado carregado. Clique em "Carregar base de imóveis" no topo da página.'
+        : 'Nenhum imóvel encontrado com os filtros atuais.';
+      tbody.innerHTML = `<tr><td colspan="${TABLE_COLUMNS.length}"><div class="empty-state">${msg}</div></td></tr>`;
     } else {
       pageItems.forEach(d=>{
         const tr = document.createElement('tr');
@@ -780,6 +785,6 @@
     buildMultiselect('msTipo');
     buildMultiselect('msModalidade');
     bindEvents();
-    loadOnlineData();
+    render(); // mostra estado vazio inicial (KPIs zerados, tabela/ranking vazios)
   });
 })();
