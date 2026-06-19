@@ -912,7 +912,46 @@
 <div class="source-bar">
   <span class="src-label">Base ativa</span>
   <span class="src-status" id="sourceStatus">Carregando base de imóveis…</span>
-  <button class="btn" id="btnReset">Atualizar dados</button>
+  <button class="btn" id="btnReset">Recarregar dados</button>
+  <button class="btn primary" id="btnRunWorkflow" title="Baixa a lista mais recente da Caixa e atualiza a base de dados">Atualizar base agora</button>
+  <button class="btn ghost" id="btnClearToken" title="Remover token do GitHub salvo" style="display:none">🔑 Limpar token</button>
+</div>
+
+<!-- Modal de configuração do token -->
+<div class="viab-overlay hidden" id="tokenOverlay">
+  <div class="viab-modal" style="max-width:480px;">
+    <div class="viab-header">
+      <div>
+        <h2>Token do GitHub</h2>
+        <div class="viab-subtitle">Necessário para disparar a atualização</div>
+      </div>
+      <button type="button" class="viab-close" id="tokenClose">✕</button>
+    </div>
+    <div style="padding:24px;">
+      <p style="font-size:13.5px;line-height:1.6;margin:0 0 18px;">
+        Para disparar a atualização diretamente pelo site, é necessário um
+        <strong>Personal Access Token</strong> do GitHub com permissão <code>workflow</code>.
+        O token fica salvo <em>apenas no seu navegador</em> (não vai para o servidor).
+      </p>
+      <p style="font-family:var(--mono);font-size:11.5px;line-height:1.8;margin:0 0 18px;background:var(--paper-2);padding:12px;border-radius:2px;">
+        Como criar:<br>
+        1. GitHub → foto do perfil (canto superior direito) → <strong>Settings</strong><br>
+        2. Role o menu lateral até o final → <strong>Developer settings</strong><br>
+        3. <strong>Personal access tokens → Tokens (classic)</strong><br>
+        4. <strong>Generate new token → Generate new token (classic)</strong><br>
+        5. Dê um nome (ex: "painel-imoveis"), escolha validade<br>
+        6. Marque apenas a permissão <strong>workflow</strong><br>
+        7. Clique em <strong>Generate token</strong> e copie o valor gerado<br>
+        8. Cole abaixo (o token começa com "ghp_")
+      </p>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input type="password" id="tokenInput" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
+          style="flex:1;font-family:var(--mono);font-size:13px;padding:10px 12px;border:1.5px solid var(--line);border-radius:2px;">
+        <button class="btn primary" id="tokenSave">Salvar e executar</button>
+      </div>
+      <div id="tokenError" style="margin-top:10px;font-family:var(--mono);font-size:12px;color:var(--bad);display:none;"></div>
+    </div>
+  </div>
 </div>
 
 <div class="layout">
@@ -1135,7 +1174,7 @@
 <div class="foot-note">
   Fonte dos dados: lista de imóveis disponibilizada publicamente pela Caixa Econômica Federal (venda-imoveis.caixa.gov.br).
   Os valores de preço de venda e avaliação são informativos — confirme sempre as condições atualizadas diretamente no site oficial antes de qualquer decisão.
-  A base é atualizada automaticamente uma vez por semana a partir do arquivo oficial da Caixa (todos os estados). Use o botão "Atualizar dados" para forçar uma nova busca.
+  A base é atualizada automaticamente toda segunda-feira. Use "Atualizar base agora" para disparar uma atualização imediata (requer token do GitHub), ou "Recarregar dados" para buscar a versão mais recente já publicada.
 </div>
 
 <script>

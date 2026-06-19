@@ -864,8 +864,144 @@
       loadOnlineData();
     });
 
+    document.getElementById('btnReset').addEventListener('click', ()=>{
+      resetFilterInputs();
+      loadOnlineData();
+    });
+
     // fecha multiselects ao clicar fora
     document.addEventListener('click', closeAllMultiselects);
+  }
+
+  /* ============ GITHUB WORKFLOW DISPATCH ============ */
+  const GITHUB_OWNER = 'tatimgomes';
+  const GITHUB_REPO  = 'imoveis-caixa';
+  const GITHUB_WORKFLOW = 'update.yml';
+  const TOKEN_KEY = 'gh_workflow_token';
+
+  function getStoredToken(){
+    try { return localStorage.getItem(TOKEN_KEY) || ''; } catch(e){ return ''; }
+  }
+  function saveToken(t){
+    try { localStorage.setItem(TOKEN_KEY, t); } catch(e){}
+  }
+  function clearToken(){
+    try { localStorage.removeItem(TOKEN_KEY); } catch(e){}
+  }
+
+  function updateTokenButtonVisibility(){
+    const hasToken = !!getStoredToken();
+    document.getElementById('btnClearToken').style.display = hasToken ? '' : 'none';
+  }
+
+  async function dispatchWorkflow(token){
+    const url = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/${GITHUB_WORKFLOW}/dispatches`;
+    const resp = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `token ${token}`,
+        'Accept': 'application/vnd.github+json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ ref: 'main' })
+    });
+    return resp;
+  }
+
+  function bindWorkflowEvents(){
+    const btnRun   = document.getElementById('btnRunWorkflow');
+    const btnClear = document.getElementById('btnClearToken');
+    const overlay  = document.getElementById('tokenOverlay');
+    const btnClose = document.getElementById('tokenClose');
+    const btnSave  = document.getElementById('tokenSave');
+    const tokenInput = document.getElementById('tokenInput');
+    const tokenError = document.getElementById('tokenError');
+
+    updateTokenButtonVisibility();
+
+    btnRun.addEventListener('click', async ()=>{
+      const token = getStoredToken();
+      if (!token){
+        // nenhum token salvo — abre modal para configurar
+        tokenInput.value = '';
+        tokenError.style.display = 'none';
+        overlay.classList.remove('hidden');
+        setTimeout(()=> tokenInput.focus(), 100);
+        return;
+      }
+      await runWorkflowWithToken(token, btnRun);
+    });
+
+    btnClear.addEventListener('click', ()=>{
+      clearToken();
+      updateTokenButtonVisibility();
+      document.getElementById('sourceStatus').innerHTML =
+        `<span style="color:var(--gold)">●</span> Token removido.`;
+    });
+
+    btnClose.addEventListener('click', ()=> overlay.classList.add('hidden'));
+    overlay.addEventListener('click', (e)=>{ if (e.target === overlay) overlay.classList.add('hidden'); });
+
+    btnSave.addEventListener('click', async ()=>{
+      const token = tokenInput.value.trim();
+      if (!token){ showTokenError('Cole o token antes de salvar.'); return; }
+      if (!token.startsWith('gh')){ showTokenError('Token inválido — deve começar com "ghp_" ou "github_pat_".'); return; }
+
+      btnSave.disabled = true;
+      btnSave.textContent = 'Verificando…';
+      tokenError.style.display = 'none';
+
+      const resp = await dispatchWorkflow(token);
+      btnSave.disabled = false;
+      btnSave.textContent = 'Salvar e executar';
+
+      if (resp.status === 204){
+        saveToken(token);
+        updateTokenButtonVisibility();
+        overlay.classList.add('hidden');
+        showWorkflowStarted();
+      } else if (resp.status === 401){
+        showTokenError('Token inválido ou expirado. Verifique e tente novamente.');
+      } else if (resp.status === 403){
+        showTokenError('Token sem permissão "workflow". Gere um novo token com essa permissão marcada.');
+      } else {
+        showTokenError(`Erro ${resp.status}. Verifique o token e tente novamente.`);
+      }
+    });
+
+    tokenInput.addEventListener('keydown', (e)=>{ if (e.key === 'Enter') btnSave.click(); });
+  }
+
+  async function runWorkflowWithToken(token, btn){
+    btn.disabled = true;
+    btn.textContent = 'Disparando…';
+    const resp = await dispatchWorkflow(token);
+    btn.disabled = false;
+    btn.textContent = 'Atualizar base agora';
+
+    if (resp.status === 204){
+      showWorkflowStarted();
+    } else if (resp.status === 401){
+      // token expirou — limpa e pede novo
+      clearToken();
+      updateTokenButtonVisibility();
+      document.getElementById('sourceStatus').innerHTML =
+        `<span style="color:var(--bad)">●</span> Token expirado ou inválido — clique em "Atualizar base agora" para configurar um novo.`;
+    } else {
+      document.getElementById('sourceStatus').innerHTML =
+        `<span style="color:var(--bad)">●</span> Erro ao disparar workflow (${resp.status}). Tente novamente.`;
+    }
+  }
+
+  function showWorkflowStarted(){
+    document.getElementById('sourceStatus').innerHTML =
+      `<span class="ok">●</span> Atualização iniciada no GitHub Actions — o processo leva alguns minutos. Clique em "Recarregar dados" quando terminar.`;
+  }
+
+  function showTokenError(msg){
+    const el = document.getElementById('tokenError');
+    el.textContent = msg;
+    el.style.display = '';
   }
 
   /* ============ INIT ============ */
@@ -877,6 +1013,7 @@
     buildMultiselect('msModalidade');
     bindEvents();
     bindViabEvents();
+    bindWorkflowEvents();
     loadOnlineData();
   });
 })();
