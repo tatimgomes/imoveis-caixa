@@ -309,7 +309,6 @@
     { key: 'desconto', label: 'Desconto', sortable: true, num: true },
     { key: 'precom2', label: 'R$/m²', sortable: true, num: true },
     { key: 'modalidade', label: 'Modalidade', sortable: false },
-    { key: 'link', label: 'Edital', sortable: false },
     { key: 'avaliar', label: 'Viabilidade', sortable: false }
   ];
 
@@ -447,6 +446,7 @@
           else if (d.desconto >= 0.2) discClass = 'mid';
           else discClass = 'low';
         }
+        tr.dataset.link = d.link || '';
         tr.innerHTML = `
           <td>${escapeHtml(d.cidade)}${d.uf?' <span style="opacity:0.5">('+escapeHtml(d.uf)+')</span>':''}</td>
           <td>${escapeHtml(d.bairro || '—')}</td>
@@ -459,7 +459,6 @@
           <td class="num discount-cell ${discClass}">${fmtPct(d.desconto)}</td>
           <td class="num">${precom2 ? fmtBRL0(precom2) : '—'}</td>
           <td>${escapeHtml(d.modalidade || '—')}</td>
-          <td>${d.link ? `<a class="tbl-link" href="${d.link}" target="_blank" rel="noopener">ver imóvel</a>` : '—'}</td>
           <td><button type="button" class="btn-viab" data-cod="${escapeAttr(d.cod)}">Avaliar</button></td>
         `;
         tbody.appendChild(tr);
@@ -832,10 +831,17 @@
       el.addEventListener(evt, viabRecalc);
     });
 
-    // delegação: botões "Avaliar" são recriados a cada render da tabela
+    // delegação: botões "Avaliar" abrem modal; clique na linha abre o imóvel
     document.getElementById('tableBody').addEventListener('click', (e)=>{
       const btn = e.target.closest('.btn-viab');
-      if (btn) openViabModal(btn.dataset.cod);
+      if (btn){
+        openViabModal(btn.dataset.cod);
+        return;
+      }
+      const tr = e.target.closest('tr');
+      if (tr && tr.dataset.link){
+        window.open(tr.dataset.link, '_blank', 'noopener');
+      }
     });
   }
 

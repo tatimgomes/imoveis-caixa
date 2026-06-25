@@ -579,8 +579,10 @@
     border-bottom: 1px solid var(--line);
     vertical-align: top;
   }
-  tbody tr:hover{ background: var(--paper-2); }
+  tbody tr{ cursor: pointer; }
+  tbody tr:hover{ background: var(--clay-soft); }
   tbody tr:nth-child(even){ background: rgba(61,90,74,0.03); }
+  tbody tr:nth-child(even):hover{ background: var(--clay-soft); }
   td.num, th.num{ text-align:right; font-family: var(--mono); white-space:nowrap; }
   td.discount-cell{ font-weight:700; }
   td.discount-cell.high{ color: var(--good); }
