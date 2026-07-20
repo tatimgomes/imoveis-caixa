@@ -951,7 +951,7 @@
     btnSave.addEventListener('click', async ()=>{
       const token = tokenInput.value.trim();
       if (!token){ showTokenError('Cole o token antes de salvar.'); return; }
-      if (!token.startsWith('gh')){ showTokenError('Token inválido — deve começar com "ghp_" ou "github_pat_".'); return; }
+      if (token.length < 10){ showTokenError('Token muito curto — verifique se foi copiado corretamente.'); return; }
 
       btnSave.disabled = true;
       btnSave.textContent = 'Verificando…';
