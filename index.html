@@ -932,22 +932,31 @@
     <div style="padding:24px;">
       <p style="font-size:13.5px;line-height:1.6;margin:0 0 18px;">
         Para disparar a atualização diretamente pelo site, é necessário um
-        <strong>Personal Access Token</strong> do GitHub com permissão <code>workflow</code>.
+        <strong>Personal Access Token</strong> do GitHub com permissão de Actions.
         O token fica salvo <em>apenas no seu navegador</em> (não vai para o servidor).
       </p>
+      <p style="font-family:var(--mono);font-size:11.5px;line-height:1.8;margin:0 0 10px;background:var(--paper-2);padding:12px;border-radius:2px;">
+        <strong>✦ Recomendado — Fine-grained token (válido por até 1 ano):</strong><br>
+        1. GitHub → foto do perfil → <strong>Settings</strong><br>
+        2. Role até o final → <strong>Developer settings</strong><br>
+        3. <strong>Personal access tokens → Fine-grained tokens</strong><br>
+        4. <strong>Generate new token</strong><br>
+        5. Nome: "painel-imoveis" · Validade: <strong>1 year</strong><br>
+        6. Resource owner: sua conta · Repository access: <strong>Only select repositories → imoveis-caixa</strong><br>
+        7. Em Permissions → Repository permissions → <strong>Actions: Read and write</strong><br>
+        8. Clique em <strong>Generate token</strong> e copie (começa com "github_pat_")
+      </p>
       <p style="font-family:var(--mono);font-size:11.5px;line-height:1.8;margin:0 0 18px;background:var(--paper-2);padding:12px;border-radius:2px;">
-        Como criar:<br>
-        1. GitHub → foto do perfil (canto superior direito) → <strong>Settings</strong><br>
-        2. Role o menu lateral até o final → <strong>Developer settings</strong><br>
+        <strong>Alternativa — Classic token:</strong><br>
+        1. GitHub → foto do perfil → <strong>Settings</strong><br>
+        2. Role até o final → <strong>Developer settings</strong><br>
         3. <strong>Personal access tokens → Tokens (classic)</strong><br>
-        4. <strong>Generate new token → Generate new token (classic)</strong><br>
-        5. Dê um nome (ex: "painel-imoveis"), escolha validade<br>
-        6. Marque apenas a permissão <strong>workflow</strong><br>
-        7. Clique em <strong>Generate token</strong> e copie o valor gerado<br>
-        8. Cole abaixo (o token começa com "ghp_")
+        4. <strong>Generate new token (classic)</strong><br>
+        5. Nome: "painel-imoveis" · marque apenas <strong>workflow</strong><br>
+        6. Clique em <strong>Generate token</strong> e copie (começa com "ghp_")
       </p>
       <div style="display:flex;gap:8px;align-items:center;">
-        <input type="password" id="tokenInput" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
+        <input type="password" id="tokenInput" placeholder="github_pat_… ou ghp_…"
           style="flex:1;font-family:var(--mono);font-size:13px;padding:10px 12px;border:1.5px solid var(--line);border-radius:2px;">
         <button class="btn primary" id="tokenSave">Salvar e executar</button>
       </div>
