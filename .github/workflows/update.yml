@@ -2,8 +2,13 @@ name: Atualizar base de imóveis (Caixa)
 
 on:
   # roda toda segunda-feira às 06:00 UTC (03:00 horário de Brasília)
+  #schedule:
+  # - cron: "0 6 * * 1" 
+    
+  # roda todos os dias às 06:00 UTC (03:00 horário de Brasília)
   schedule:
-    - cron: "0 6 * * 1"
+    - cron: "0 6 * * *" 
+
   # permite disparar manualmente pela aba Actions do GitHub
   workflow_dispatch: {}
 
