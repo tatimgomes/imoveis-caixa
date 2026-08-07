@@ -7,7 +7,7 @@ on:
     
   # roda todos os dias às 06:00 UTC (03:00 horário de Brasília)
   schedule:
-    - cron: "0 6 * * *" 
+    - cron: "*/5 * * * *" 
 
   # permite disparar manualmente pela aba Actions do GitHub
   workflow_dispatch: {}
