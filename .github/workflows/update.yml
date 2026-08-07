@@ -3,7 +3,7 @@ name: Atualizar base de imóveis (Caixa)
 on:
 
   schedule:
-    - cron: "*/5 * * * *" 
+    - cron: "0 6 * * *" 
 
   # permite disparar manualmente pela aba Actions do GitHub
   workflow_dispatch: {}
