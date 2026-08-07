@@ -1,11 +1,7 @@
 name: Atualizar base de imóveis (Caixa)
 
 on:
-  # roda toda segunda-feira às 06:00 UTC (03:00 horário de Brasília)
-  #schedule:
-  # - cron: "0 6 * * 1" 
-    
-  # roda todos os dias às 06:00 UTC (03:00 horário de Brasília)
+
   schedule:
     - cron: "*/5 * * * *" 
 
