@@ -15,8 +15,9 @@ app.js                    -> lógica (filtros, tabela, etc.)
 data.json                 -> índice da base (lista de arquivos por UF)
 data/UF.json              -> dados de cada estado (27 arquivos, gerados automaticamente)
 scripts/update_data.py    -> script que baixa e processa o CSV da Caixa
-.github/workflows/update.yml -> agenda a atualização semanal
+.github/workflows/update.yml -> agenda a atualização diária
 ```
+
 
 > Por que dividido por UF? O arquivo único (~11MB) falhava ao ser enviado
 > pela interface web do GitHub. Dividido por estado, cada arquivo fica
